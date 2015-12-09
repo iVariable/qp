@@ -2,6 +2,7 @@ package qp
 
 type ConsumableQueue interface {
 	GetName() string
+	Configure(config interface{}) error
 	Consume() (*Message, error)
 	Ack(message *Message) error
 	Reject(message *Message) error

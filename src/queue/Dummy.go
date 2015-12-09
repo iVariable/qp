@@ -35,6 +35,10 @@ func (q *Dummy) Ack(message *qp.Message) error {
 	return nil
 }
 
+func (q *Dummy) Configure(config interface{}) error {
+	return nil
+}
+
 func (q *Dummy) Reject(message *qp.Message) error {
 	fmt.Println("[Dummy Queue]: Reject message")
 	return nil

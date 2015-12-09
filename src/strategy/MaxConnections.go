@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 	"fmt"
+	"utils"
 )
 
 type MaxConnections struct {
@@ -18,15 +19,19 @@ type MaxConnections struct {
 
 type MaxConnectionsConfiguration struct {
 	MaxConnections int
+	Queue string
+	Processor string
 }
 
-func (p *MaxConnections) Configure(configuration qp.Configuration) error {
-	if config, ok := configuration.(MaxConnectionsConfiguration); ok {
-		p.configuration = config
-	} else {
-		return errors.New("Wrong configuration provided")
+func (p *MaxConnections) Configure(configuration map[string]interface{}, context *qp.Context) error {
+
+	utils.FillStruct(configuration, &p.configuration)
+
+	if p.configuration.MaxConnections <= 0 {
+		panic("MaxConnections option for MaxConnections strategy should be > 0") //PROBABLY SHOULD BE ERROR
 	}
 
+	fmt.Println(p.configuration.MaxConnections)
 	return nil
 }
 

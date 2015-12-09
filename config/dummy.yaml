@@ -1,0 +1,15 @@
+strategy:
+  - name: My default processing strategy
+    type: MaxConnections
+    options:
+      MaxConnections: 10
+      Queue: My Dummy queue
+      Processor: Stdout processor
+
+queue:
+  - name: My Dummy queue
+    type: Dummy
+
+processor:
+  - name: Stdout processor
+    type: Stdout

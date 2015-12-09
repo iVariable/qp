@@ -20,7 +20,7 @@ type Statistics struct {
 type Configuration interface {}
 
 type ProcessingStrategy interface {
-	Configure(configuration Configuration) error
+	Configure(configuration map[string]interface{}, context *Context) error
 	Start(queue ConsumableQueue, processor Processor) error
 	Stop() error
 	GetStatistics() Statistics
