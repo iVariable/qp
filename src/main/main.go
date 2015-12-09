@@ -84,8 +84,9 @@ func loadQueues(context *qp.Context) {
 		if !ok {
 			panic(fmt.Sprintf("Unknown queue type requested: %s", config.Type))
 		}
-		context.AvailableQueues[config.Name] = newQueue()
-		context.AvailableQueues[config.Name].Configure(config.Options)
+		newInstance := newQueue()
+		newInstance.Configure(config.Options)
+		context.AvailableQueues[config.Name] = &newInstance
 	}
 }
 
@@ -95,19 +96,24 @@ func loadProcessors(context *qp.Context) {
 		if !ok {
 			panic(fmt.Sprintf("Unknown processor type requested: %s", config.Type))
 		}
-		context.AvailableProcessors[config.Name] = newValue()
-		context.AvailableProcessors[config.Name].Configure(config.Options)
+		newInstance := newValue()
+		newInstance.Configure(config.Options)
+		context.AvailableProcessors[config.Name] = &newInstance
 	}
 }
 
 func loadStrategies(context *qp.Context) {
+	if len(context.Configuration.Strategy) != 1 {
+		panic("There should be exactly one Strategy configured")
+	}
 	for _, config := range context.Configuration.Strategy {
 		newValue, ok := resources.AvailableStrategies[config.Type]
 		if !ok {
 			panic(fmt.Sprintf("Unknown strategy type requested: %s", config.Type))
 		}
-		context.AvailableStrategies[config.Name] = newValue()
-		context.AvailableStrategies[config.Name].Configure(config.Options, context)
+		newInstance := newValue()
+		newInstance.Configure(config.Options, context)
+		context.AvailableStrategies[config.Name] = &newInstance
 	}
 }
 
@@ -142,10 +148,12 @@ func stop(context *qp.Context) {
 }
 
 func run(context *qp.Context) {
-	queue := createQueue(context.Configuration)
+	var strategy qp.ProcessingStrategy
 
-	processor := createProcessor(context.Configuration)
-	strategy := createStrategy(context.Configuration)
+	for _, s := range context.AvailableStrategies { //Taking random element from hash map ))
+		strategy = *s
+		break;
+	}
 
 	context.Strategy = strategy
 	context.Set("StrategyInitiatedStop", true)
@@ -157,7 +165,7 @@ func run(context *qp.Context) {
 
 	fmt.Println("Start processing queue")
 	context.Set("IsRunning", true)
-	if err := strategy.Start(queue, processor); err == nil {
+	if err := strategy.Start(); err == nil {
 		if context.GetOrNil("StrategyInitiatedStop").(bool) {
 			context.SendTerminate(0)
 		}

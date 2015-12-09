@@ -31,9 +31,9 @@ type Context struct {
 	Configuration Config
 	Strategy ProcessingStrategy
 
-	AvailableQueues map[string]ConsumableQueue
-	AvailableProcessors map[string]Processor
-	AvailableStrategies map[string]ProcessingStrategy
+	AvailableQueues map[string]*ConsumableQueue
+	AvailableProcessors map[string]*Processor
+	AvailableStrategies map[string]*ProcessingStrategy
 
 	Control chan ControlSignal
 	data map[string]interface{}
@@ -49,9 +49,9 @@ func NewContext() *Context {
 	context := Context{}
 	context.data = make(map[string]interface{})
 	context.Control = make(chan ControlSignal)
-	context.AvailableQueues = make(map[string]ConsumableQueue)
-	context.AvailableProcessors = make(map[string]Processor)
-	context.AvailableStrategies = make(map[string]ProcessingStrategy)
+	context.AvailableQueues = make(map[string]*ConsumableQueue)
+	context.AvailableProcessors = make(map[string]*Processor)
+	context.AvailableStrategies = make(map[string]*ProcessingStrategy)
 	return &context
 }
 

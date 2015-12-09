@@ -21,7 +21,7 @@ type Configuration interface {}
 
 type ProcessingStrategy interface {
 	Configure(configuration map[string]interface{}, context *Context) error
-	Start(queue ConsumableQueue, processor Processor) error
+	Start() error
 	Stop() error
 	GetStatistics() Statistics
 }

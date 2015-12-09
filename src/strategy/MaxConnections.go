@@ -31,17 +31,26 @@ func (p *MaxConnections) Configure(configuration map[string]interface{}, context
 		panic("MaxConnections option for MaxConnections strategy should be > 0") //PROBABLY SHOULD BE ERROR
 	}
 
-	fmt.Println(p.configuration.MaxConnections)
+	if queue, ok := context.AvailableQueues[p.configuration.Queue]; !ok {
+		panic("Unknown Queue requested")
+	} else {
+		p.queue = *queue
+	}
+
+	if processor, ok := context.AvailableProcessors[p.configuration.Processor]; !ok {
+		panic("Unknown Queue requested")
+	} else {
+		p.processor = *processor
+	}
+
 	return nil
 }
 
-func (p *MaxConnections) Start(queue qp.ConsumableQueue, processor qp.Processor) error {
+func (p *MaxConnections) Start() error {
 	if p.process {
 		return errors.New("This strategy is already running! You need to Stop() it before calling Start again")
 	}
 
-	p.processor = processor
-	p.queue = queue
 	p.process = true
 
 	p.jobs = make(chan *qp.SimpleJob, p.configuration.MaxConnections)
@@ -49,12 +58,12 @@ func (p *MaxConnections) Start(queue qp.ConsumableQueue, processor qp.Processor)
 	go func(){
 		//NOT SAFE, probably should implement mutex here on reading of p.process
 		for p.process {
-			message, _ := queue.Consume()
+			message, _ := p.queue.Consume() //TODO check err
 			if (message == nil) {
 				fmt.Println("No message, skip processing")
 				continue
 			}
-			job := qp.NewSimpleJob(queue, *message)
+			job := qp.NewSimpleJob(p.queue, *message)
 			p.jobs <- job
 		}
 		close(p.jobs)
@@ -67,7 +76,7 @@ func (p *MaxConnections) Start(queue qp.ConsumableQueue, processor qp.Processor)
 		}
 		for job := range p.jobs {
 			fmt.Println(fmt.Sprintf("[Worker %v] Processing job", id))
-			processor.Process(job)
+			p.processor.Process(job)
 		}
 		p.wait.Done()
 	}
