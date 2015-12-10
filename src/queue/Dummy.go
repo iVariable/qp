@@ -4,10 +4,16 @@ import (
 	"time"
 	"fmt"
 	"math/rand"
+	"utils"
+	"errors"
 )
 
 type Dummy struct {
-	configuration qp.Configuration
+	configuration dummyConfiguration
+}
+
+type dummyConfiguration struct {
+	RandomSleepDelay int
 }
 
 func (q *Dummy) GetName() string {
@@ -18,12 +24,7 @@ func (q *Dummy) Consume() (*qp.Message, error) {
 	fmt.Println("[Dummy Queue]: Consume message")
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	time.Sleep(time.Duration(r.Intn(1000)) * time.Millisecond) //TODO make configurable
-
-	if r.Intn(10) == 1 {
-		fmt.Println("[Dummy Queue]: No messages to consume, sending nil")
-		return nil, nil
-	}
+	time.Sleep(time.Duration(r.Intn(q.configuration.RandomSleepDelay)) * time.Millisecond) //TODO make configurable
 
 	return &qp.Message{
 		Id: time.Now(),
@@ -35,7 +36,11 @@ func (q *Dummy) Ack(message *qp.Message) error {
 	return nil
 }
 
-func (q *Dummy) Configure(config interface{}) error {
+func (q *Dummy) Configure(configuration map[string]interface{}) error {
+	utils.FillStruct(configuration, &q.configuration)
+	if q.configuration.RandomSleepDelay < 0 {
+		return errors.New("RandomSleepDelay should be >= 0")
+	}
 	return nil
 }
 

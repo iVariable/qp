@@ -11,10 +11,7 @@ type Stdout struct {
 }
 
 func (l *Stdout) Process(job qp.Job) error {
-	fmt.Printf("[Stdout processor] Received message: %#s\n", job.GetMessage())
-//	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-//
-//	time.Sleep(time.Duration(r.Intn(1000)) * time.Millisecond) //TODO make configurable
+	fmt.Printf("[Stdout processor] Received message: %#v\n", job.GetMessage())
 	job.AckMessage()
 	return nil
 }

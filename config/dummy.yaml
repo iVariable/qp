@@ -1,14 +1,24 @@
 strategy:
   - name: My default processing strategy
-    type: MaxConnections
+    type: ParallelProcessing
     options:
-      MaxConnections: 10
-      Queue: My Dummy queue
+      MaxThreads: 1
+      Queue: TailQueueFIFO
       Processor: Stdout processor
 
 queue:
-  - name: My Dummy queue
+  - name: DummyQueue
     type: Dummy
+    options:
+      RandomSleepDelay: 1000
+  - name: TailQueue
+    type: Tail
+    options:
+      Path: /data/playground/qp/config/dummy.yaml
+  - name: TailQueueFIFO
+    type: Tail
+    options:
+      Path: /tmp/1
 
 processor:
   - name: Stdout processor

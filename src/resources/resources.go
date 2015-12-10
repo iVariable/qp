@@ -17,9 +17,13 @@ func init() {
 		return &queue.Dummy{}
 	}
 
+	AvailableQueues["Tail"] = func() qp.ConsumableQueue {
+		return &queue.Tail{}
+	}
+
 	//Strategies
-	AvailableStrategies["MaxConnections"] = func() qp.ProcessingStrategy {
-		return &strategy.MaxConnections{}
+	AvailableStrategies["ParallelProcessing"] = func() qp.ProcessingStrategy {
+		return &strategy.ParallelProcessing{}
 	}
 
 	//Processors
