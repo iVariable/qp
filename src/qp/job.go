@@ -1,23 +1,23 @@
 package qp
 
 type Job interface {
-	GetMessage() Message
+	GetMessage() IMessage
 	AckMessage() error
 	RejectMessage() error
 }
 
 type SimpleJob struct {
 	queue ConsumableQueue
-	message Message
+	message IMessage
 }
 
-func NewSimpleJob(q ConsumableQueue, m Message) *SimpleJob {
+func NewSimpleJob(q ConsumableQueue, m IMessage) *SimpleJob {
 	return &SimpleJob{
 		queue: q,
 		message: m}
 }
 
-func (j *SimpleJob) GetMessage() Message {
+func (j *SimpleJob) GetMessage() IMessage {
 	return j.message
 }
 

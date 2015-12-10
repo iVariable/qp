@@ -25,7 +25,7 @@ type maxConnectionsConfiguration struct {
 }
 
 type consumeResult struct {
-	message *qp.Message
+	message qp.IMessage
 	err error
 }
 
@@ -83,7 +83,7 @@ func (p *ParallelProcessing) Start() error {
 				if message.err != nil {
 					fmt.Println("Error on message consume: "+message.err.Error())
 				} else {
-					job := qp.NewSimpleJob(p.queue, *message.message)
+					job := qp.NewSimpleJob(p.queue, message.message)
 					p.jobs <- job
 
 				}

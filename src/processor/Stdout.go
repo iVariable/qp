@@ -16,6 +16,6 @@ func (l *Stdout) Process(job qp.Job) error {
 	return nil
 }
 
-func (l *Stdout) Configure(config interface{}) error {
+func (l *Stdout) Configure(configuration map[string]interface{}) error {
 	return nil
 }

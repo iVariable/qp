@@ -4,7 +4,7 @@ strategy:
     options:
       MaxThreads: 1
       Queue: TailQueueFIFO
-      Processor: Stdout processor
+      Processor: HttpProxy
 
 queue:
   - name: DummyQueue
@@ -23,3 +23,8 @@ queue:
 processor:
   - name: Stdout processor
     type: Stdout
+  - name: HttpProxy
+    type: HttpProxy
+    options:
+      Timeout: 5
+      Url: "http://localhost:9000/"

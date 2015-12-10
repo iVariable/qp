@@ -20,7 +20,7 @@ func (q *Dummy) GetName() string {
 	return "Dummy queue"
 }
 
-func (q *Dummy) Consume() (*qp.Message, error) {
+func (q *Dummy) Consume() (qp.IMessage, error) {
 	fmt.Println("[Dummy Queue]: Consume message")
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -31,7 +31,7 @@ func (q *Dummy) Consume() (*qp.Message, error) {
 		Body: fmt.Sprintf("Dummy message generated at %s", time.Now())}, nil
 }
 
-func (q *Dummy) Ack(message *qp.Message) error {
+func (q *Dummy) Ack(message *qp.IMessage) error {
 	fmt.Println("[Dummy Queue]: Ack message")
 	return nil
 }
@@ -44,7 +44,7 @@ func (q *Dummy) Configure(configuration map[string]interface{}) error {
 	return nil
 }
 
-func (q *Dummy) Reject(message *qp.Message) error {
+func (q *Dummy) Reject(message *qp.IMessage) error {
 	fmt.Println("[Dummy Queue]: Reject message")
 	return nil
 }
