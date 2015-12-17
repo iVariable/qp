@@ -13,6 +13,7 @@ const CONTROL_SIGNAL_RUN = 1
 const CONTROL_SIGNAL_STOP = 2
 const CONTROL_SIGNAL_TERMINATE = 3
 const CONTROL_SIGNAL_TERMINATE_GRACEFUL = 4
+const CONTROL_SIGNAL_STATUS = 5
 
 type Config struct {
 	Strategy []struct {
@@ -60,31 +61,42 @@ func NewContext() *Context {
 	return &context
 }
 
-func (c *Context) DispatchLoop(run, stop func(c *Context)) {
+func (c *Context) DispatchLoop(run, stop, status func(c *Context)) {
 
 	go func() {
 		signals := make(chan os.Signal, 1)
-		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 
 		go func() {
-			<-signals
+			for{
+				sig := <-signals
+				switch sig {
+				case syscall.SIGUSR1:
+					c.SendStatus()
+				case syscall.SIGINT:
+					fallthrough
+				case syscall.SIGTERM:
+					fmt.Println("Shutting down gracefully")
+					c.SendTerminateGraceful()
 
-			fmt.Println("Shutting down gracefully")
-			c.SendTerminateGraceful()
-
-			select {
-			case <-time.After(30 * time.Second): //TODO make configurable
-				fmt.Println("Shutting down forced after 30 secs")
-				c.SendTerminate(1)
-			case <-signals:
-				fmt.Println("Shutfown forced because of second signal")
-				c.SendTerminate(666)
+					select {
+					case <-time.After(30 * time.Second): //TODO make configurable
+						fmt.Println("Shutting down forced after 30 secs")
+						c.SendTerminate(1)
+					case <-signals:
+						fmt.Println("Shutfown forced because of second signal")
+						c.SendTerminate(666)
+					}
+				}
 			}
 		}()
 	}()
 
 	for signal := range c.control {
 		switch signal.Signal {
+		case CONTROL_SIGNAL_STATUS:
+			fmt.Println("Received STATUS signal")
+			go status(c)
 		case CONTROL_SIGNAL_RUN:
 			fmt.Println("Received RUN signal")
 			go run(c)
@@ -109,6 +121,10 @@ func (c *Context) DispatchLoop(run, stop func(c *Context)) {
 
 func (c *Context) SendRun() {
 	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_RUN}
+}
+
+func (c *Context) SendStatus() {
+	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_STATUS}
 }
 
 func (c *Context) SendTerminateGraceful() {

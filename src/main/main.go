@@ -26,7 +26,11 @@ func main() {
 		context.SendRun()
 	}()
 
-	context.DispatchLoop(run, stop)
+	context.DispatchLoop(run, stop, status)
+}
+
+func status(context *qp.Context) {
+	fmt.Println(context.Strategy.GetStatistics())
 }
 
 func load(context *qp.Context, configFile string) {
@@ -109,7 +113,15 @@ func run(context *qp.Context) {
 	context.Set("StrategyInitiatedStop", true)
 
 	fmt.Println("Configuring processing strategy")
-	if err := context.Strategy.Configure(context.Configuration.Strategy[0].Options, context); err != nil {
+	config := make(map[string]interface{})
+
+	for k,v := range context.Configuration.Strategy[0].Options {
+		config[k] = v
+	}
+
+	config["Name"] = context.Configuration.Strategy[0].Name
+
+	if err := context.Strategy.Configure(config, context); err != nil {
 		panic("Error configuring strategy: " + err.Error())
 	}
 

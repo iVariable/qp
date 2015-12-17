@@ -5,16 +5,16 @@ import (
 	"time"
 )
 
-const StatusStopped = 0
-const StatusRunning = 1
+const StatusStopped = "Stopped"
+const StatusRunning = "Running"
 
 type Statistics struct {
 	QueueName         string
 	ProcessedMessages big.Int
 	FailedMessaged    big.Int
 	StartedAt         time.Time
-	Status            int
-	MessagesInQueue   int
+	Status            string
+	MessagesInQueue   big.Int
 }
 
 type Configuration interface{}

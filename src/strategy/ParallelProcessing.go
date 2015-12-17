@@ -6,6 +6,8 @@ import (
 	"qp"
 	"sync"
 	"utils"
+	"time"
+	"math/big"
 )
 
 type ParallelProcessing struct {
@@ -16,9 +18,11 @@ type ParallelProcessing struct {
 	stop          chan bool
 	wait          sync.WaitGroup
 	jobs          chan *qp.SimpleJob
+	startedAt	  time.Time
 }
 
 type maxConnectionsConfiguration struct {
+	Name string
 	MaxThreads int
 	Queue      string
 	Processor  string
@@ -58,8 +62,8 @@ func (p *ParallelProcessing) Start() error {
 	if p.process {
 		return errors.New("This strategy is already running! You need to Stop() it before calling Start again")
 	}
-
-	p.process = true
+	p.startedAt = time.Now()
+	p.process   = true
 
 	p.jobs = make(chan *qp.SimpleJob, p.configuration.MaxThreads)
 
@@ -122,5 +126,18 @@ func (p *ParallelProcessing) Stop() error {
 }
 
 func (p *ParallelProcessing) GetStatistics() qp.Statistics {
-	return qp.Statistics{}
+	var status string
+	if p.process {
+		status = qp.StatusRunning
+	} else {
+		status = qp.StatusStopped
+	}
+	return qp.Statistics{
+		Status: status,
+		QueueName: p.configuration.Name,
+		ProcessedMessages: *big.NewInt(0),
+		FailedMessaged: *big.NewInt(0),
+		StartedAt: p.startedAt,
+		MessagesInQueue: *big.NewInt(0),
+	}
 }

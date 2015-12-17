@@ -3,7 +3,7 @@ strategy:
     type: ParallelProcessing
     options:
       MaxThreads: 10
-      Queue: Sqs
+      Queue: DummyQueue
       Processor: Stdout
 
 queue:
@@ -11,14 +11,17 @@ queue:
     type: Dummy
     options:
       RandomSleepDelay: 1000
+
   - name: TailQueue
     type: Tail
     options:
       Path: /data/playground/qp/config/dummy.yaml
+
   - name: TailQueueFIFO
     type: Tail
     options:
       Path: /tmp/1
+
   - name: Sqs
     type: Sqs
     options:
@@ -30,6 +33,7 @@ queue:
 processor:
   - name: Stdout
     type: Stdout
+
   - name: HttpProxy
     type: HttpProxy
     options:
