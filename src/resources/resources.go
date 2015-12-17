@@ -32,6 +32,9 @@ func init() {
 	AvailableProcessors["Stdout"] = func() qp.Processor {
 		return &processor.Stdout{}
 	}
+	AvailableProcessors["Shell"] = func() qp.Processor {
+		return &processor.Shell{}
+	}
 	AvailableProcessors["HttpProxy"] = func() qp.Processor {
 		return &processor.HttpProxy{}
 	}

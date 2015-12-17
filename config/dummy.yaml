@@ -4,7 +4,7 @@ strategy:
     options:
       MaxThreads: 10
       Queue: DummyQueue
-      Processor: Stdout
+      Processor: Shell
 
 queue:
   - name: DummyQueue
@@ -33,6 +33,12 @@ queue:
 processor:
   - name: Stdout
     type: Stdout
+
+  - name: Shell
+    type: Shell
+    options:
+      Command: echo
+      EchoOutput: true
 
   - name: HttpProxy
     type: HttpProxy
