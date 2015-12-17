@@ -1,21 +1,21 @@
 package strategy
 
 import (
-	"qp"
 	"errors"
-	"sync"
 	"fmt"
+	"qp"
+	"sync"
 	"utils"
 )
 
 type ParallelProcessing struct {
 	configuration maxConnectionsConfiguration
-	queue qp.ConsumableQueue
-	processor qp.Processor
-	process bool
-	stop chan bool
-	wait sync.WaitGroup
-	jobs chan *qp.SimpleJob
+	queue         qp.ConsumableQueue
+	processor     qp.Processor
+	process       bool
+	stop          chan bool
+	wait          sync.WaitGroup
+	jobs          chan *qp.SimpleJob
 }
 
 type maxConnectionsConfiguration struct {
@@ -26,7 +26,7 @@ type maxConnectionsConfiguration struct {
 
 type consumeResult struct {
 	message qp.IMessage
-	err error
+	err     error
 }
 
 func (p *ParallelProcessing) Configure(configuration map[string]interface{}, context *qp.Context) error {
@@ -63,9 +63,9 @@ func (p *ParallelProcessing) Start() error {
 
 	p.jobs = make(chan *qp.SimpleJob, p.configuration.MaxThreads)
 
-	go func(){
+	go func() {
 		messages := make(chan *consumeResult)
-		consume := func(){
+		consume := func() {
 			message, err := p.queue.Consume()
 			messages <- &consumeResult{message, err}
 		}
@@ -75,13 +75,13 @@ func (p *ParallelProcessing) Start() error {
 		go consume()
 
 		for {
-			select{
+			select {
 			case <-p.stop:
 				close(p.jobs)
 				return
-			case message = <- messages:
+			case message = <-messages:
 				if message.err != nil {
-					fmt.Println("Error on message consume: "+message.err.Error())
+					fmt.Println("Error on message consume: " + message.err.Error())
 				} else {
 					job := qp.NewSimpleJob(p.queue, message.message)
 					p.jobs <- job
@@ -92,7 +92,7 @@ func (p *ParallelProcessing) Start() error {
 		}
 	}()
 
-	process := func (id int, decreaseWaitGroup bool) {
+	process := func(id int, decreaseWaitGroup bool) {
 		p.wait.Add(1)
 		if decreaseWaitGroup {
 			p.wait.Done()
@@ -106,7 +106,7 @@ func (p *ParallelProcessing) Start() error {
 
 	p.wait.Add(1)
 	for i := 1; i <= p.configuration.MaxThreads; i++ {
-		go process(i, i == 1);
+		go process(i, i == 1)
 	}
 
 	p.wait.Wait()

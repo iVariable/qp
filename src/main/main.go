@@ -1,12 +1,13 @@
 package main
 
 import (
-	"qp"
-	"os"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
+	"qp"
 	"resources"
+
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 
 	load(context, configFile)
 
-	go func(){
+	go func() {
 		context.SendRun()
 	}()
 
@@ -59,7 +60,7 @@ func loadQueues(context *qp.Context) {
 		}
 		newInstance := newQueue()
 		if err := newInstance.Configure(config.Options); err != nil {
-			panic("Error configuring queue: "+ err.Error())
+			panic("Error configuring queue: " + err.Error())
 		}
 		context.AvailableQueues[config.Name] = &newInstance
 	}
@@ -73,7 +74,7 @@ func loadProcessors(context *qp.Context) {
 		}
 		newInstance := newValue()
 		if err := newInstance.Configure(config.Options); err != nil {
-			panic("Error configuring processor: "+ err.Error())
+			panic("Error configuring processor: " + err.Error())
 		}
 		context.AvailableProcessors[config.Name] = &newInstance
 	}
@@ -90,7 +91,7 @@ func loadStrategies(context *qp.Context) {
 		}
 		newInstance := newValue()
 		if err := newInstance.Configure(config.Options, context); err != nil {
-			panic("Error configuring strategy: "+ err.Error())
+			panic("Error configuring strategy: " + err.Error())
 		}
 		context.AvailableStrategies[config.Name] = &newInstance
 	}

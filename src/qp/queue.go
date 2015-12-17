@@ -1,4 +1,5 @@
 package qp
+
 import "encoding/json"
 
 type ConsumableQueue interface {
@@ -11,7 +12,7 @@ type ConsumableQueue interface {
 }
 
 type Message struct {
-	Id interface{}
+	Id   interface{}
 	Body interface{}
 }
 

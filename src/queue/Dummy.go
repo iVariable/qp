@@ -1,11 +1,12 @@
 package queue
+
 import (
-	"qp"
-	"time"
+	"errors"
 	"fmt"
 	"math/rand"
+	"qp"
+	"time"
 	"utils"
-	"errors"
 )
 
 type Dummy struct {
@@ -27,7 +28,7 @@ func (q *Dummy) Consume() (qp.IMessage, error) {
 	time.Sleep(time.Duration(r.Intn(q.configuration.RandomSleepDelay)) * time.Millisecond) //TODO make configurable
 
 	return &qp.Message{
-		Id: time.Now(),
+		Id:   time.Now(),
 		Body: fmt.Sprintf("Dummy message generated at %s", time.Now())}, nil
 }
 

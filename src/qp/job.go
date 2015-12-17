@@ -7,13 +7,13 @@ type Job interface {
 }
 
 type SimpleJob struct {
-	queue ConsumableQueue
+	queue   ConsumableQueue
 	message IMessage
 }
 
 func NewSimpleJob(q ConsumableQueue, m IMessage) *SimpleJob {
 	return &SimpleJob{
-		queue: q,
+		queue:   q,
 		message: m}
 }
 

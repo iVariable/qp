@@ -1,11 +1,11 @@
 package qp
 
 import (
-	"sync"
 	"fmt"
 	"os"
-	"syscall"
 	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 )
 
@@ -15,38 +15,38 @@ const CONTROL_SIGNAL_TERMINATE = 3
 const CONTROL_SIGNAL_TERMINATE_GRACEFUL = 4
 
 type Config struct {
-	Strategy []struct{
-		Name string
-		Type string
+	Strategy []struct {
+		Name    string
+		Type    string
 		Options map[string]interface{}
 	}
-	Queue []struct{
-		Name string
-		Type string
+	Queue []struct {
+		Name    string
+		Type    string
 		Options map[string]interface{}
 	}
-	Processor []struct{
-		Name string
-		Type string
+	Processor []struct {
+		Name    string
+		Type    string
 		Options map[string]interface{}
 	}
 }
 
 type Context struct {
 	Configuration Config
-	Strategy ProcessingStrategy
+	Strategy      ProcessingStrategy
 
-	AvailableQueues map[string]*ConsumableQueue
+	AvailableQueues     map[string]*ConsumableQueue
 	AvailableProcessors map[string]*Processor
 	AvailableStrategies map[string]*ProcessingStrategy
 
-	control chan ControlSignal
-	data map[string]interface{}
+	control   chan ControlSignal
+	data      map[string]interface{}
 	dataMutex sync.RWMutex
 }
 
 type ControlSignal struct {
-	Signal int
+	Signal   int
 	ExitCode int
 }
 
@@ -62,7 +62,7 @@ func NewContext() *Context {
 
 func (c *Context) DispatchLoop(run, stop func(c *Context)) {
 
-	go func(){
+	go func() {
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
@@ -73,7 +73,7 @@ func (c *Context) DispatchLoop(run, stop func(c *Context)) {
 			c.SendTerminateGraceful()
 
 			select {
-			case <- time.After(30 * time.Second): //TODO make configurable
+			case <-time.After(30 * time.Second): //TODO make configurable
 				fmt.Println("Shutting down forced after 30 secs")
 				c.SendTerminate(1)
 			case <-signals:
@@ -96,7 +96,7 @@ func (c *Context) DispatchLoop(run, stop func(c *Context)) {
 			os.Exit(signal.ExitCode)
 		case CONTROL_SIGNAL_TERMINATE_GRACEFUL:
 			fmt.Println("Received TERMINATE_GRACEFUL signal.")
-			go func () {
+			go func() {
 				stop(c)
 				fmt.Println("Normal exit performed")
 				c.SendTerminate(0)

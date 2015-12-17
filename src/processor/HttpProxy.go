@@ -1,21 +1,22 @@
 package processor
+
 import (
-	"qp"
-	"net/http"
-	"utils"
 	"errors"
-	"time"
+	"net/http"
+	"qp"
 	"strings"
+	"time"
+	"utils"
 )
 
 type HttpProxy struct {
 	configuration httpProxyConfiguration
-	client *http.Client
+	client        *http.Client
 }
 
 type httpProxyConfiguration struct {
 	Timeout int
-	Url string
+	Url     string
 }
 
 func (h *HttpProxy) Process(job qp.Job) error {
@@ -30,13 +31,16 @@ func (h *HttpProxy) Process(job qp.Job) error {
 	}
 
 	resp, err := h.client.Do(request)
-
 	if err != nil || resp.StatusCode != 200 {
-		job.RejectMessage()
+		if rejectError := job.RejectMessage(); rejectError != nil {
+			panic(rejectError.Error()) //TODO what to do?
+		}
 	} else {
-		job.AckMessage()
+		resp.Body.Close()
+		if ackError := job.AckMessage(); ackError != nil {
+			panic(ackError.Error()) //TODO what to do?
+		}
 	}
-	defer resp.Body.Close()
 
 	return nil
 }

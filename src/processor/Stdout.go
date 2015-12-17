@@ -1,9 +1,10 @@
 package processor
+
 import (
-	"qp"
 	"fmt"
-//	"time"
-//	"math/rand"
+	"qp"
+	//	"time"
+	//	"math/rand"
 )
 
 type Stdout struct {
@@ -12,7 +13,9 @@ type Stdout struct {
 
 func (l *Stdout) Process(job qp.Job) error {
 	fmt.Printf("[Stdout processor] Received message: %#v\n", job.GetMessage())
-	job.AckMessage()
+	if ackError := job.AckMessage(); ackError != nil {
+		panic(ackError.Error()) //TODO what to do?
+	}
 	return nil
 }
 

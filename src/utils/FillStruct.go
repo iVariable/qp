@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"reflect"
-	"fmt"
 	"errors"
+	"fmt"
+	"reflect"
 )
 
 func FillStruct(m map[string]interface{}, s interface{}) error {

@@ -1,15 +1,15 @@
 package resources
 
 import (
-	"queue"
-	"qp"
-	"strategy"
 	"processor"
+	"qp"
+	"queue"
+	"strategy"
 )
 
-var AvailableQueues = make(map[string]func()qp.ConsumableQueue)
-var AvailableStrategies = make(map[string]func()qp.ProcessingStrategy)
-var AvailableProcessors = make(map[string]func()qp.Processor)
+var AvailableQueues = make(map[string]func() qp.ConsumableQueue)
+var AvailableStrategies = make(map[string]func() qp.ProcessingStrategy)
+var AvailableProcessors = make(map[string]func() qp.Processor)
 
 func init() {
 	//Queues
@@ -34,5 +34,3 @@ func init() {
 		return &processor.HttpProxy{}
 	}
 }
-
-
