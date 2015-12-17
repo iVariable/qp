@@ -2,9 +2,9 @@ strategy:
   - name: My default processing strategy
     type: ParallelProcessing
     options:
-      MaxThreads: 1
-      Queue: TailQueueFIFO
-      Processor: HttpProxy
+      MaxThreads: 10
+      Queue: Sqs
+      Processor: Stdout
 
 queue:
   - name: DummyQueue
@@ -19,9 +19,16 @@ queue:
     type: Tail
     options:
       Path: /tmp/1
+  - name: Sqs
+    type: Sqs
+    options:
+      QueueName: "print-queue-dead-letter-dev"
+      AwsRegion: eu-west-1
+      AwsProfile: printingservice
+      WaitTimeSeconds: 20
 
 processor:
-  - name: Stdout processor
+  - name: Stdout
     type: Stdout
   - name: HttpProxy
     type: HttpProxy

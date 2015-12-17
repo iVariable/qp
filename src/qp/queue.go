@@ -6,8 +6,8 @@ type ConsumableQueue interface {
 	GetName() string
 	Configure(configuration map[string]interface{}) error
 	Consume() (IMessage, error)
-	Ack(message *IMessage) error
-	Reject(message *IMessage) error
+	Ack(message IMessage) error
+	Reject(message IMessage) error
 	GetNumberOfMessages() (int, error)
 }
 

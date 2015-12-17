@@ -32,7 +32,7 @@ func (q *Dummy) Consume() (qp.IMessage, error) {
 		Body: fmt.Sprintf("Dummy message generated at %s", time.Now())}, nil
 }
 
-func (q *Dummy) Ack(message *qp.IMessage) error {
+func (q *Dummy) Ack(message qp.IMessage) error {
 	fmt.Println("[Dummy Queue]: Ack message")
 	return nil
 }
@@ -45,7 +45,7 @@ func (q *Dummy) Configure(configuration map[string]interface{}) error {
 	return nil
 }
 
-func (q *Dummy) Reject(message *qp.IMessage) error {
+func (q *Dummy) Reject(message qp.IMessage) error {
 	fmt.Println("[Dummy Queue]: Reject message")
 	return nil
 }

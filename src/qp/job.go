@@ -22,9 +22,9 @@ func (j *SimpleJob) GetMessage() IMessage {
 }
 
 func (j *SimpleJob) AckMessage() error {
-	return j.queue.Ack(&j.message)
+	return j.queue.Ack(j.message)
 }
 
 func (j *SimpleJob) RejectMessage() error {
-	return j.queue.Reject(&j.message)
+	return j.queue.Reject(j.message)
 }

@@ -57,11 +57,11 @@ func (q *Tail) Consume() (qp.IMessage, error) {
 	return &qp.Message{Id: line.Time.String(), Body: line.Text}, nil
 }
 
-func (q *Tail) Ack(message *qp.IMessage) error {
+func (q *Tail) Ack(message qp.IMessage) error {
 	return nil
 }
 
-func (q *Tail) Reject(message *qp.IMessage) error {
+func (q *Tail) Reject(message qp.IMessage) error {
 	return errors.New("Tail queue does NOT support Reject() method")
 }
 

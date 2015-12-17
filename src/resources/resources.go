@@ -16,9 +16,11 @@ func init() {
 	AvailableQueues["Dummy"] = func() qp.ConsumableQueue {
 		return &queue.Dummy{}
 	}
-
 	AvailableQueues["Tail"] = func() qp.ConsumableQueue {
 		return &queue.Tail{}
+	}
+	AvailableQueues["Sqs"] = func() qp.ConsumableQueue {
+		return &queue.Sqs{}
 	}
 
 	//Strategies
