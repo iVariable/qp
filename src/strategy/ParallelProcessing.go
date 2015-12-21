@@ -11,7 +11,7 @@ import (
 )
 
 type ParallelProcessing struct {
-	configuration maxConnectionsConfiguration
+	configuration parallelProcessingConfiguration
 	queue         qp.ConsumableQueue
 	processor     qp.Processor
 	process       bool
@@ -21,9 +21,10 @@ type ParallelProcessing struct {
 	startedAt	  time.Time
 }
 
-type maxConnectionsConfiguration struct {
+type parallelProcessingConfiguration struct {
 	Name string
 	MaxThreads int
+	ProcessorThroughput int
 	Queue      string
 	Processor  string
 }
@@ -67,6 +68,7 @@ func (p *ParallelProcessing) Start() error {
 
 	p.jobs = make(chan *qp.SimpleJob, p.configuration.MaxThreads)
 
+	//Actual consumer
 	go func() {
 		messages := make(chan *consumeResult)
 		consume := func() {
@@ -78,12 +80,27 @@ func (p *ParallelProcessing) Start() error {
 
 		go consume()
 
+		prevSecond := time.Now().Second()
+		messagesProcessed := 0
+
 		for {
+			if p.configuration.ProcessorThroughput > 0 {
+				for messagesProcessed >= p.configuration.ProcessorThroughput {
+					if prevSecond != time.Now().Second() {
+						messagesProcessed = 0
+						prevSecond = time.Now().Second()
+					} else {
+						time.Sleep(1 * time.Millisecond)
+					}
+				}
+			}
+
 			select {
 			case <-p.stop:
 				close(p.jobs)
 				return
 			case message = <-messages:
+				messagesProcessed++
 				if message.err != nil {
 					fmt.Println("Error on message consume: " + message.err.Error())
 				} else {

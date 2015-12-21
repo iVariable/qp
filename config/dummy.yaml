@@ -3,6 +3,7 @@ strategy:
     type: ParallelProcessing
     options:
       MaxThreads: 10
+      ProcessorThroughput: 2
       Queue: DummyQueue
       Processor: Shell
 
@@ -39,7 +40,7 @@ processor:
     options:
       MessagePlaceholder: "%msg%"
       Command: "echo %msg% | grep 34"
-      EchoOutput: false
+      EchoOutput: true
 
   - name: HttpProxy
     type: HttpProxy
