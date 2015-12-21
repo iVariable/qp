@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"os/exec"
 	"utils"
+	"strings"
 )
 
 type Shell struct {
@@ -14,6 +15,7 @@ type Shell struct {
 
 type shellConfiguration struct {
 	Command string
+	MessagePlaceholder string
 	EchoOutput bool
 }
 
@@ -22,7 +24,10 @@ func (l *Shell) Process(job qp.Job) error {
 	if err != nil {
 		panic(err.Error())
 	}
-	cmd := exec.Command(l.configuration.Command, msg)
+
+	commandLine := strings.Replace(l.configuration.Command, l.configuration.MessagePlaceholder, msg, -1)
+
+	cmd := exec.Command("bash", "-c", commandLine) //lol
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -46,5 +51,8 @@ func (l *Shell) Process(job qp.Job) error {
 
 func (l *Shell) Configure(configuration map[string]interface{}) error {
 	utils.FillStruct(configuration, &l.configuration)
+	if l.configuration.MessagePlaceholder == "" {
+		l.configuration.MessagePlaceholder = "%msg%"
+	}
 	return nil
 }

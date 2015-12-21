@@ -10,7 +10,7 @@ queue:
   - name: DummyQueue
     type: Dummy
     options:
-      RandomSleepDelay: 1000
+      RandomSleepDelay: 10
 
   - name: TailQueue
     type: Tail
@@ -37,8 +37,9 @@ processor:
   - name: Shell
     type: Shell
     options:
-      Command: echo
-      EchoOutput: true
+      MessagePlaceholder: "%msg%"
+      Command: "echo %msg% | grep 34"
+      EchoOutput: false
 
   - name: HttpProxy
     type: HttpProxy
