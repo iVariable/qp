@@ -12,8 +12,8 @@ import (
 
 type ParallelProcessing struct {
 	configuration parallelProcessingConfiguration
-	queue         qp.ConsumableQueue
-	processor     qp.Processor
+	queue         qp.IConsumableQueue
+	processor     qp.IProcessor
 	process       bool
 	stop          chan bool
 	wait          sync.WaitGroup
@@ -85,7 +85,7 @@ func (p *ParallelProcessing) Start() error {
 
 		for {
 			if p.configuration.ProcessorThroughput > 0 {
-				for messagesProcessed >= p.configuration.ProcessorThroughput {
+				for messagesProcessed >= p.configuration.ProcessorThroughput { //can be done better with time.After(), etc
 					if prevSecond != time.Now().Second() {
 						messagesProcessed = 0
 						prevSecond = time.Now().Second()

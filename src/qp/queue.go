@@ -2,7 +2,7 @@ package qp
 
 import "encoding/json"
 
-type ConsumableQueue interface {
+type IConsumableQueue interface {
 	GetName() string
 	Configure(configuration map[string]interface{}) error
 	Consume() (IMessage, error)

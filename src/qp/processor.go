@@ -1,6 +1,6 @@
 package qp
 
-type Processor interface {
+type IProcessor interface {
 	Configure(configuration map[string]interface{}) error
-	Process(job Job) error
+	Process(job IJob) error
 }

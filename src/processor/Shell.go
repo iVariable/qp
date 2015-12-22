@@ -19,7 +19,7 @@ type shellConfiguration struct {
 	EchoOutput bool
 }
 
-func (l *Shell) Process(job qp.Job) error {
+func (l *Shell) Process(job qp.IJob) error {
 	msg, err := job.GetMessage().Serialize()
 	if err != nil {
 		panic(err.Error())

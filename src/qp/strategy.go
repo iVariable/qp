@@ -19,7 +19,7 @@ type Statistics struct {
 
 type Configuration interface{}
 
-type ProcessingStrategy interface {
+type IProcessingStrategy interface {
 	Configure(configuration map[string]interface{}, context *Context) error
 	Start() error
 	Stop() error

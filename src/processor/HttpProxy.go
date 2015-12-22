@@ -19,7 +19,7 @@ type httpProxyConfiguration struct {
 	Url     string
 }
 
-func (h *HttpProxy) Process(job qp.Job) error {
+func (h *HttpProxy) Process(job qp.IJob) error {
 	serializedMessage, err := job.GetMessage().Serialize()
 	if err != nil {
 		return err

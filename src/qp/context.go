@@ -34,16 +34,16 @@ type Config struct {
 }
 
 type Context struct {
-	Configuration Config
-	Strategy      ProcessingStrategy
+	Configuration       Config
+	Strategy            IProcessingStrategy
 
-	AvailableQueues     map[string]*ConsumableQueue
-	AvailableProcessors map[string]*Processor
-	AvailableStrategies map[string]*ProcessingStrategy
+	AvailableQueues     map[string]*IConsumableQueue
+	AvailableProcessors map[string]*IProcessor
+	AvailableStrategies map[string]*IProcessingStrategy
 
-	control   chan ControlSignal
-	data      map[string]interface{}
-	dataMutex sync.RWMutex
+	control             chan ControlSignal
+	data                map[string]interface{}
+	dataMutex           sync.RWMutex
 }
 
 type ControlSignal struct {
@@ -55,9 +55,9 @@ func NewContext() *Context {
 	context := Context{}
 	context.data = make(map[string]interface{})
 	context.control = make(chan ControlSignal)
-	context.AvailableQueues = make(map[string]*ConsumableQueue)
-	context.AvailableProcessors = make(map[string]*Processor)
-	context.AvailableStrategies = make(map[string]*ProcessingStrategy)
+	context.AvailableQueues = make(map[string]*IConsumableQueue)
+	context.AvailableProcessors = make(map[string]*IProcessor)
+	context.AvailableStrategies = make(map[string]*IProcessingStrategy)
 	return &context
 }
 
