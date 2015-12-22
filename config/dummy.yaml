@@ -1,9 +1,15 @@
+general:
+  log:
+    level: debug
+    path: /tmp/log.log
+
 strategy:
   - name: My default processing strategy
     type: ParallelProcessing
     options:
       MaxThreads: 10
       ProcessorThroughput: 2
+      OnProcessingError: warning
       Queue: DummyQueue
       Processor: Shell
 

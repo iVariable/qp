@@ -7,10 +7,12 @@ import (
 	"qp"
 	"time"
 	"utils"
+	log "github.com/Sirupsen/logrus"
 )
 
 type Dummy struct {
 	configuration dummyConfiguration
+	logger *log.Entry
 }
 
 type dummyConfiguration struct {
@@ -22,7 +24,7 @@ func (q *Dummy) GetName() string {
 }
 
 func (q *Dummy) Consume() (qp.IMessage, error) {
-	fmt.Println("[Dummy Queue]: Consume message")
+	q.logger.Debug("Message consume")
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	time.Sleep(time.Duration(r.Intn(q.configuration.RandomSleepDelay)) * time.Millisecond) //TODO make configurable
@@ -33,20 +35,26 @@ func (q *Dummy) Consume() (qp.IMessage, error) {
 }
 
 func (q *Dummy) Ack(message qp.IMessage) error {
-	fmt.Println("[Dummy Queue]: Ack message")
+	q.logger.WithField("message", message).Debug("Message acknowledged")
 	return nil
 }
 
 func (q *Dummy) Configure(configuration map[string]interface{}) error {
+	q.logger = log.WithFields(log.Fields{
+		"type": "queue",
+		"queue": "Dummy",
+	})
+	q.logger.Debug("Reading configuration")
 	utils.FillStruct(configuration, &q.configuration)
 	if q.configuration.RandomSleepDelay < 0 {
 		return errors.New("RandomSleepDelay should be >= 0")
 	}
+	q.logger.WithField("RandomSleepDelay", q.configuration.RandomSleepDelay).Info("Configuration loaded")
 	return nil
 }
 
 func (q *Dummy) Reject(message qp.IMessage) error {
-	fmt.Println("[Dummy Queue]: Reject message")
+	q.logger.WithField("message", message).Debug("Message rejected")
 	return nil
 }
 

@@ -2,41 +2,67 @@ package strategy
 
 import (
 	"errors"
-	"fmt"
 	"qp"
 	"sync"
 	"utils"
 	"time"
 	"math/big"
+	log "github.com/Sirupsen/logrus"
 )
 
-type ParallelProcessing struct {
-	configuration parallelProcessingConfiguration
-	queue         qp.IConsumableQueue
-	processor     qp.IProcessor
-	process       bool
-	stop          chan bool
-	wait          sync.WaitGroup
-	jobs          chan *qp.SimpleJob
-	startedAt	  time.Time
-}
+const (
+	OnProcessingError_Panic = "panic"
+	OnProcessingError_Warning = "warning"
+	OnProcessingError_Ignore = "ignore"
+)
 
-type parallelProcessingConfiguration struct {
-	Name string
-	MaxThreads int
-	ProcessorThroughput int
-	Queue      string
-	Processor  string
-}
+type (
+	ParallelProcessing struct {
+		configuration parallelProcessingConfiguration
+		queue         qp.IConsumableQueue
+		processor     qp.IProcessor
+		process       bool
+		logger        *log.Entry
+		stop          chan bool
+		wait          sync.WaitGroup
+		jobs          chan *qp.SimpleJob
+		startedAt	  time.Time
+	}
 
-type consumeResult struct {
-	message qp.IMessage
-	err     error
-}
+	parallelProcessingConfiguration struct {
+		Name string
+		MaxThreads int
+		ProcessorThroughput int
+		Queue      string
+		Processor  string
+		OnProcessingError string
+	}
+
+	consumeResult struct {
+		message qp.IMessage
+		err     error
+	}
+)
 
 func (p *ParallelProcessing) Configure(configuration map[string]interface{}, context *qp.Context) error {
+	log.WithFields(log.Fields{
+		"strategy": "ParallelProcessing",
+	}).Debug("Reading configuration")
 
 	utils.FillStruct(configuration, &p.configuration)
+	p.logger = log.WithFields(log.Fields{
+		"type": "strategy",
+		"strategy": "ParallelProcessing",
+		"name": p.configuration.Name,
+	})
+
+	switch p.configuration.OnProcessingError {
+	case OnProcessingError_Ignore:
+	case OnProcessingError_Warning:
+	case OnProcessingError_Panic:
+	default:
+		panic("Unknown value set for OnProcessingError")
+	}
 
 	if p.configuration.MaxThreads <= 0 {
 		panic("MaxThreads option for ParallelProcessing strategy should be > 0") //PROBABLY SHOULD BE ERROR
@@ -56,11 +82,21 @@ func (p *ParallelProcessing) Configure(configuration map[string]interface{}, con
 
 	p.stop = make(chan bool)
 
+	p.logger.WithFields(log.Fields{
+		"MaxThreads": p.configuration.MaxThreads,
+		"ProcessorThroughput": p.configuration.ProcessorThroughput,
+		"Queue": p.configuration.Queue,
+		"Processor": p.configuration.Processor,
+		"OnProcessingError": p.configuration.OnProcessingError,
+	}).Info("Configuration loaded")
+
 	return nil
 }
 
 func (p *ParallelProcessing) Start() error {
+	p.logger.Info("Start processing")
 	if p.process {
+		p.logger.Error("Attempt to start already running strategy")
 		return errors.New("This strategy is already running! You need to Stop() it before calling Start again")
 	}
 	p.startedAt = time.Now()
@@ -70,6 +106,7 @@ func (p *ParallelProcessing) Start() error {
 
 	//Actual consumer
 	go func() {
+		p.logger.Debug("Start consuming messages")
 		messages := make(chan *consumeResult)
 		consume := func() {
 			message, err := p.queue.Consume()
@@ -98,15 +135,16 @@ func (p *ParallelProcessing) Start() error {
 			select {
 			case <-p.stop:
 				close(p.jobs)
+				p.logger.Info("Recieved stop signal. Stopped messages consuming")
 				return
 			case message = <-messages:
 				messagesProcessed++
 				if message.err != nil {
-					fmt.Println("Error on message consume: " + message.err.Error())
+					p.logger.WithField("error", message.err.Error()).Error("Error on message consume")
 				} else {
 					job := qp.NewSimpleJob(p.queue, message.message)
+					p.logger.WithField("message", message.message).Debug("Job created")
 					p.jobs <- job
-
 				}
 				go consume()
 			}
@@ -114,31 +152,46 @@ func (p *ParallelProcessing) Start() error {
 	}()
 
 	process := func(id int, decreaseWaitGroup bool) {
+		logger := p.logger.WithField("worker", id)
+		logger.Debug("Start worker thread")
 		p.wait.Add(1)
 		if decreaseWaitGroup {
 			p.wait.Done()
 		}
 		for job := range p.jobs {
-			fmt.Println(fmt.Sprintf("[Worker %v] Processing job", id))
-			p.processor.Process(job)
+			logger.Debug("Recieved job")
+			if err := p.processor.Process(job); err != nil {
+				switch p.configuration.OnProcessingError {
+				case OnProcessingError_Ignore:
+				case OnProcessingError_Warning:
+					logger.WithField("error", err.Error()).Warn("Error on job processing")
+				case OnProcessingError_Panic:
+					logger.WithField("error", err.Error()).Fatal("Error on job processing")
+					panic("Error while processing: "+err.Error())
+				}
+			}
 		}
+		logger.Debug("Worker thread finished")
 		p.wait.Done()
 	}
 
+	p.logger.Debug("Launching workers")
 	p.wait.Add(1)
 	for i := 1; i <= p.configuration.MaxThreads; i++ {
 		go process(i, i == 1)
 	}
-
 	p.wait.Wait()
+	p.logger.Debug("All workers finished work")
 
 	return nil
 }
 
 func (p *ParallelProcessing) Stop() error {
+	p.logger.Info("Stopping processing")
 	p.process = false
 	p.stop <- true
 	p.wait.Wait()
+	p.logger.Info("Processing stopped")
 	return nil
 }
 
@@ -149,7 +202,7 @@ func (p *ParallelProcessing) GetStatistics() qp.Statistics {
 	} else {
 		status = qp.StatusStopped
 	}
-	return qp.Statistics{
+	stats := qp.Statistics{
 		Status: status,
 		QueueName: p.configuration.Name,
 		ProcessedMessages: *big.NewInt(0),
@@ -157,4 +210,12 @@ func (p *ParallelProcessing) GetStatistics() qp.Statistics {
 		StartedAt: p.startedAt,
 		MessagesInQueue: *big.NewInt(0),
 	}
+	p.logger.WithFields(log.Fields{
+		"Status": stats.Status,
+		"ProcessedMessages": stats.ProcessedMessages,
+		"FailedMessaged": stats.FailedMessaged,
+		"StartedAt": stats.StartedAt,
+		"MessagesInQueue": stats.MessagesInQueue,
+	}).Debug("Statistics")
+	return stats
 }

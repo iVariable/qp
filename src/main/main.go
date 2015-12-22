@@ -8,6 +8,7 @@ import (
 	"resources"
 
 	"gopkg.in/yaml.v2"
+	log "github.com/Sirupsen/logrus"
 )
 
 func main() {
@@ -47,6 +48,7 @@ func load(context *qp.Context, configFile string) {
 
 	context.Configuration = config
 
+	loadLogger(context)
 	loadQueues(context)
 	loadProcessors(context)
 	loadStrategies(context)
@@ -54,6 +56,14 @@ func load(context *qp.Context, configFile string) {
 	context.Strategy = *context.AvailableStrategies[context.Configuration.Strategy[0].Name]
 
 	context.Set("IsRunning", false)
+}
+
+func loadLogger(context *qp.Context) {
+	level, err := log.ParseLevel(context.Configuration.General.Log.Level)
+	if err != nil {
+		panic("Wrong LogLevel ["+context.Configuration.General.Log.Level+"]!")
+	}
+	log.SetLevel(level)
 }
 
 func loadQueues(context *qp.Context) {

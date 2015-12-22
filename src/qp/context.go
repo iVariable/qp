@@ -16,6 +16,12 @@ const CONTROL_SIGNAL_TERMINATE_GRACEFUL = 4
 const CONTROL_SIGNAL_STATUS = 5
 
 type Config struct {
+	General struct {
+		Log struct {
+			Level string
+			Path string
+		}
+	}
 	Strategy []struct {
 		Name    string
 		Type    string

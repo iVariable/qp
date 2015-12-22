@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 	"utils"
+	log "github.com/Sirupsen/logrus"
 )
 
 type HttpProxy struct {
 	configuration httpProxyConfiguration
 	client        *http.Client
+	logger 		  *log.Entry
 }
 
 type httpProxyConfiguration struct {
@@ -20,8 +22,10 @@ type httpProxyConfiguration struct {
 }
 
 func (h *HttpProxy) Process(job qp.IJob) error {
+	h.logger.WithField("job", job).Debug("Processing job")
 	serializedMessage, err := job.GetMessage().Serialize()
 	if err != nil {
+		h.logger.WithField("error", err).Error("Error during message serialization")
 		return err
 	}
 
@@ -33,13 +37,17 @@ func (h *HttpProxy) Process(job qp.IJob) error {
 	resp, err := h.client.Do(request)
 	if err != nil || resp.StatusCode != 200 {
 		if rejectError := job.RejectMessage(); rejectError != nil {
-			panic(rejectError.Error()) //TODO what to do?
+			h.logger.WithField("error", rejectError).Debug("Error on MessageReject")
+			return rejectError
 		}
+		h.logger.Debug("job rejected")
 	} else {
 		resp.Body.Close()
 		if ackError := job.AckMessage(); ackError != nil {
-			panic(ackError.Error()) //TODO what to do?
+			h.logger.WithField("error", ackError).Debug("Error on MessageAcknowledge")
+			return ackError
 		}
+		h.logger.Debug("job acknowledged")
 	}
 
 	return nil
@@ -54,6 +62,16 @@ func (h *HttpProxy) Configure(configuration map[string]interface{}) error {
 
 	h.client = &http.Client{
 		Timeout: time.Duration(h.configuration.Timeout) * time.Second}
+
+	h.logger = log.WithFields(log.Fields{
+		"type": "processor",
+		"processor": "HttpProxy",
+	})
+
+	h.logger.WithFields(log.Fields{
+		"Timeout": h.configuration.Timeout,
+		"Url": h.configuration.Url,
+	}).Info("Configuration loaded")
 
 	return nil
 }
