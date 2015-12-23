@@ -82,13 +82,7 @@ func (p *ParallelProcessing) Configure(configuration map[string]interface{}, con
 
 	p.stop = make(chan bool)
 
-	p.logger.WithFields(log.Fields{
-		"MaxThreads": p.configuration.MaxThreads,
-		"ProcessorThroughput": p.configuration.ProcessorThroughput,
-		"Queue": p.configuration.Queue,
-		"Processor": p.configuration.Processor,
-		"OnProcessingError": p.configuration.OnProcessingError,
-	}).Info("Configuration loaded")
+	p.logger.WithField("configuration", p.configuration).Info("Configuration loaded")
 
 	return nil
 }

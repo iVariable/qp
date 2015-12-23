@@ -6,10 +6,21 @@ import (
 	"os"
 	"qp"
 	"resources"
+	"utils"
 
 	"gopkg.in/yaml.v2"
 	log "github.com/Sirupsen/logrus"
 )
+
+var (
+	logger *log.Entry
+)
+
+func init() {
+	logger = log.WithFields(log.Fields{
+
+	})
+}
 
 func main() {
 
@@ -47,8 +58,10 @@ func load(context *qp.Context, configFile string) {
 	}
 
 	context.Configuration = config
-
 	loadLogger(context)
+
+	logger.WithField("config", config).Info("Loading main configuration")
+
 	loadQueues(context)
 	loadProcessors(context)
 	loadStrategies(context)
@@ -61,7 +74,7 @@ func load(context *qp.Context, configFile string) {
 func loadLogger(context *qp.Context) {
 	level, err := log.ParseLevel(context.Configuration.General.Log.Level)
 	if err != nil {
-		panic("Wrong LogLevel ["+context.Configuration.General.Log.Level+"]!")
+		utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Wrong LogLevel [%s]", context.Configuration.General.Log.Level)
 	}
 	log.SetLevel(level)
 }
@@ -70,11 +83,13 @@ func loadQueues(context *qp.Context) {
 	for _, config := range context.Configuration.Queue {
 		newQueue, ok := resources.AvailableQueues[config.Type]
 		if !ok {
-			panic(fmt.Sprintf("Unknown queue type requested: %s", config.Type))
+			logger.WithField("requestedType", config.Type).Fatal("Unknown queue type requested")
+			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Unknown queue type requested: %s", config.Type)
 		}
 		newInstance := newQueue()
 		if err := newInstance.Configure(config.Options); err != nil {
-			panic("Error configuring queue: " + err.Error())
+			logger.WithField("error", err).Fatal("Error configuring queue")
+			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring queue: %s", err.Error())
 		}
 		context.AvailableQueues[config.Name] = &newInstance
 	}
@@ -84,11 +99,13 @@ func loadProcessors(context *qp.Context) {
 	for _, config := range context.Configuration.Processor {
 		newValue, ok := resources.AvailableProcessors[config.Type]
 		if !ok {
-			panic(fmt.Sprintf("Unknown processor type requested: %s", config.Type))
+			logger.WithField("requestedType", config.Type).Fatal("Unknown processor type requested")
+			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Unknown processor type requested: %s", config.Type)
 		}
 		newInstance := newValue()
 		if err := newInstance.Configure(config.Options); err != nil {
-			panic("Error configuring processor: " + err.Error())
+			logger.WithField("error", err).Fatal("Error configuring processor")
+			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring processor: %s", err.Error())
 		}
 		context.AvailableProcessors[config.Name] = &newInstance
 	}
@@ -96,16 +113,19 @@ func loadProcessors(context *qp.Context) {
 
 func loadStrategies(context *qp.Context) {
 	if len(context.Configuration.Strategy) != 1 {
-		panic("There should be exactly one Strategy configured")
+		logger.Fatal("There should be exactly one Strategy configured")
+		utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "There should be exactly one Strategy configured")
 	}
 	for _, config := range context.Configuration.Strategy {
 		newValue, ok := resources.AvailableStrategies[config.Type]
 		if !ok {
-			panic(fmt.Sprintf("Unknown strategy type requested: %s", config.Type))
+			logger.WithField("requestedType", config.Type).Fatal("Unknown strategy type requested")
+			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Unknown strategy type requested: %s", config.Type)
 		}
 		newInstance := newValue()
 		if err := newInstance.Configure(config.Options, context); err != nil {
-			panic("Error configuring strategy: " + err.Error())
+			logger.WithField("error", err).Fatal("Error configuring strategy")
+			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring strategy: %s", err.Error())
 		}
 		context.AvailableStrategies[config.Name] = &newInstance
 	}
@@ -122,7 +142,7 @@ func stop(context *qp.Context) {
 func run(context *qp.Context) {
 	context.Set("StrategyInitiatedStop", true)
 
-	fmt.Println("Configuring processing strategy")
+	logger.Info("Configuring processing strategy")
 	config := make(map[string]interface{})
 
 	for k,v := range context.Configuration.Strategy[0].Options {
@@ -132,16 +152,18 @@ func run(context *qp.Context) {
 	config["Name"] = context.Configuration.Strategy[0].Name
 
 	if err := context.Strategy.Configure(config, context); err != nil {
-		panic("Error configuring strategy: " + err.Error())
+		logger.WithField("error", err).Fatal("Error configuring strategy")
+		utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring strategy: %s", err.Error())
 	}
 
-	fmt.Println("Start processing queue")
+	logger.Info("Start processing queue")
 	context.Set("IsRunning", true)
 	if err := context.Strategy.Start(); err == nil {
 		if context.GetOrNil("StrategyInitiatedStop").(bool) {
 			context.SendTerminate(0)
 		}
 	} else {
-		panic(err)
+		logger.WithField("error", err).Fatal("Error running strategy")
+		utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Error running strategy: %s", err.Error())
 	}
 }

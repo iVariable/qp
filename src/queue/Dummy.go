@@ -31,7 +31,7 @@ func (q *Dummy) Consume() (qp.IMessage, error) {
 
 	return &qp.Message{
 		Id:   time.Now(),
-		Body: fmt.Sprintf("Dummy message generated at %s", time.Now())}, nil
+		Body: fmt.Sprintf("Dummy message generated | break at %s", time.Now())}, nil
 }
 
 func (q *Dummy) Ack(message qp.IMessage) error {
@@ -49,7 +49,7 @@ func (q *Dummy) Configure(configuration map[string]interface{}) error {
 	if q.configuration.RandomSleepDelay < 0 {
 		return errors.New("RandomSleepDelay should be >= 0")
 	}
-	q.logger.WithField("RandomSleepDelay", q.configuration.RandomSleepDelay).Info("Configuration loaded")
+	q.logger.WithField("configuration", q.configuration).Info("Configuration loaded")
 	return nil
 }
 

@@ -68,10 +68,7 @@ func (h *HttpProxy) Configure(configuration map[string]interface{}) error {
 		"processor": "HttpProxy",
 	})
 
-	h.logger.WithFields(log.Fields{
-		"Timeout": h.configuration.Timeout,
-		"Url": h.configuration.Url,
-	}).Info("Configuration loaded")
+	h.logger.WithField("configuration", h.configuration).Info("Configuration loaded")
 
 	return nil
 }

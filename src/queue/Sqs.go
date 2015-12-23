@@ -9,12 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"errors"
+	log "github.com/Sirupsen/logrus"
 )
 
 type Sqs struct {
 	configuration sqsConfiguration
 	queue *sqs.SQS
 	queueUrl *string
+	logger *log.Entry
 }
 
 type sqsConfiguration struct {
@@ -25,6 +27,11 @@ type sqsConfiguration struct {
 }
 
 func (q *Sqs) Configure(configuration map[string]interface{}) error {
+	q.logger = log.WithFields(log.Fields{
+		"type": "queue",
+		"queue": "Sqs",
+	})
+	q.logger.Debug("Reading configuration")
 	q.configuration.WaitTimeSeconds = 20 //Defaults
 	utils.FillStruct(configuration, &q.configuration)
 
@@ -48,10 +55,13 @@ func (q *Sqs) Configure(configuration map[string]interface{}) error {
 	resp, err := q.queue.GetQueueUrl(params)
 
 	if err != nil {
+		q.logger.WithError(err).Error("Error on GetQueueUrl")
 		return err
 	}
 
 	q.queueUrl = resp.QueueUrl
+
+	q.logger.WithField("configuration", q.configuration).Info("Configuration loaded")
 
 	return nil
 }
@@ -61,7 +71,7 @@ func (q *Sqs) GetName() string {
 }
 
 func (q *Sqs) Consume() (qp.IMessage, error) {
-
+	q.logger.Debug("Message consume")
 	for {
 		params := &sqs.ReceiveMessageInput{
 			QueueUrl: aws.String(*q.queueUrl),
@@ -85,7 +95,7 @@ func (q *Sqs) Consume() (qp.IMessage, error) {
 }
 
 func (q *Sqs) Ack(message qp.IMessage) error {
-
+	q.logger.WithField("message", message).Debug("Message acknowledged")
 	params := &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(*q.queueUrl),
 		ReceiptHandle: aws.String((message.GetId()).(string)),
@@ -101,9 +111,10 @@ func (q *Sqs) Ack(message qp.IMessage) error {
 }
 
 func (q *Sqs) Reject(message qp.IMessage) error {
+	q.logger.WithField("message", message).Debug("Message rejected")
 	// Do nothing. Aws SQS will take care of not acknowledged messages
 	// and will put them into dead letter queue for us
-	// We can integrate here some RejectPolicy, but do not want to spent time in this now
+	// We can integrate here some RejectPolicy, but do not want to spent time on this now
 	return nil
 }
 

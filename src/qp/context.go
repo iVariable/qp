@@ -1,12 +1,13 @@
 package qp
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+	log "github.com/Sirupsen/logrus"
+	"utils"
 )
 
 const CONTROL_SIGNAL_RUN = 1
@@ -50,6 +51,7 @@ type Context struct {
 	control             chan ControlSignal
 	data                map[string]interface{}
 	dataMutex           sync.RWMutex
+	logger				*log.Entry
 }
 
 type ControlSignal struct {
@@ -64,11 +66,12 @@ func NewContext() *Context {
 	context.AvailableQueues = make(map[string]*IConsumableQueue)
 	context.AvailableProcessors = make(map[string]*IProcessor)
 	context.AvailableStrategies = make(map[string]*IProcessingStrategy)
+	context.logger = log.WithField("type", "context")
 	return &context
 }
 
 func (c *Context) DispatchLoop(run, stop, status func(c *Context)) {
-
+	c.logger.Debug("Entering DispatchLoop")
 	go func() {
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
@@ -76,22 +79,23 @@ func (c *Context) DispatchLoop(run, stop, status func(c *Context)) {
 		go func() {
 			for{
 				sig := <-signals
+				c.logger.WithField("signal", sig).Debug("OS signal caught")
 				switch sig {
 				case syscall.SIGUSR1:
 					c.SendStatus()
 				case syscall.SIGINT:
 					fallthrough
 				case syscall.SIGTERM:
-					fmt.Println("Shutting down gracefully")
+					c.logger.Info("Shutting down gracefully")
 					c.SendTerminateGraceful()
 
 					select {
 					case <-time.After(30 * time.Second): //TODO make configurable
-						fmt.Println("Shutting down forced after 30 secs")
-						c.SendTerminate(1)
+						c.logger.Info("Shutting down forced after 30 secs")
+						c.SendTerminate(utils.EXITCODE_SHUTDOWN_FORCED)
 					case <-signals:
-						fmt.Println("Shutfown forced because of second signal")
-						c.SendTerminate(666)
+						c.logger.Info("Shutfown forced because of second signal")
+						c.SendTerminate(utils.EXITCODE_SHUTDOWN_FORCED)
 					}
 				}
 			}
@@ -99,50 +103,57 @@ func (c *Context) DispatchLoop(run, stop, status func(c *Context)) {
 	}()
 
 	for signal := range c.control {
+		c.logger.WithField("signal", signal).Debug("Flow signal caught")
 		switch signal.Signal {
 		case CONTROL_SIGNAL_STATUS:
-			fmt.Println("Received STATUS signal")
+			c.logger.Debug("Received STATUS signal")
 			go status(c)
 		case CONTROL_SIGNAL_RUN:
-			fmt.Println("Received RUN signal")
+			c.logger.Debug("Received RUN signal")
 			go run(c)
 		case CONTROL_SIGNAL_STOP:
-			fmt.Println("Received STOP signal")
+			c.logger.Debug("Received STOP signal")
 			go stop(c)
 		case CONTROL_SIGNAL_TERMINATE:
-			fmt.Println("Received TERMINATE signal")
-			os.Exit(signal.ExitCode)
+			c.logger.Debug("Received TERMINATE signal")
+			utils.Quit(signal.ExitCode)
 		case CONTROL_SIGNAL_TERMINATE_GRACEFUL:
-			fmt.Println("Received TERMINATE_GRACEFUL signal.")
+			c.logger.Debug("Received TERMINATE_GRACEFUL signal.")
 			go func() {
 				stop(c)
-				fmt.Println("Normal exit performed")
-				c.SendTerminate(0)
+				c.logger.Debug("Normal exit performed")
+				c.SendTerminate(utils.EXITCODE_OK)
 			}()
 		default:
-			panic("Unknown control signal received")
+			c.logger.Fatal("Unknown control signal received")
+			utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Unknown control signal received")
 		}
 	}
 }
 
+func (c *Context) sendControlSignal(signal ControlSignal) {
+	c.logger.WithField("signal", signal).Debug("Control signal sent")
+	c.control <- signal
+}
+
 func (c *Context) SendRun() {
-	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_RUN}
+	c.sendControlSignal(ControlSignal{Signal: CONTROL_SIGNAL_RUN})
 }
 
 func (c *Context) SendStatus() {
-	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_STATUS}
+	c.sendControlSignal(ControlSignal{Signal: CONTROL_SIGNAL_STATUS})
 }
 
 func (c *Context) SendTerminateGraceful() {
-	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_TERMINATE_GRACEFUL}
+	c.sendControlSignal(ControlSignal{Signal: CONTROL_SIGNAL_TERMINATE_GRACEFUL})
 }
 
 func (c *Context) SendStop() {
-	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_STOP}
+	c.sendControlSignal(ControlSignal{Signal: CONTROL_SIGNAL_STOP})
 }
 
 func (c *Context) SendTerminate(code int) {
-	c.control <- ControlSignal{Signal: CONTROL_SIGNAL_TERMINATE, ExitCode: code}
+	c.sendControlSignal(ControlSignal{Signal: CONTROL_SIGNAL_TERMINATE, ExitCode: code})
 }
 
 func (c *Context) Get(name string) (value interface{}, ok bool) {

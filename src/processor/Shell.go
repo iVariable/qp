@@ -29,7 +29,7 @@ func (l *Shell) Process(job qp.IJob) error {
 		return err
 	}
 
-	commandLine := strings.Replace(l.configuration.Command, l.configuration.MessagePlaceholder, msg, -1)
+	commandLine := strings.Replace(l.configuration.Command, l.configuration.MessagePlaceholder, msg, -1) //TODO message escaping missing!
 
 	cmd := exec.Command("bash", "-c", commandLine) //TODO lol
 
@@ -70,10 +70,6 @@ func (l *Shell) Configure(configuration map[string]interface{}) error {
 		"type": "processor",
 		"processor": "Shell",
 	})
-	l.logger.WithFields(log.Fields{
-		"Command": l.configuration.Command,
-		"MessagePlaceholder": l.configuration.MessagePlaceholder,
-		"EchoOutput": l.configuration.EchoOutput,
-	}).Info("Configuration loaded")
+	l.logger.WithField("configuration", l.configuration).Info("Configuration loaded")
 	return nil
 }
