@@ -3,16 +3,16 @@ package queue
 import (
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"math/rand"
 	"qp"
 	"time"
 	"utils"
-	log "github.com/Sirupsen/logrus"
 )
 
 type Dummy struct {
 	configuration dummyConfiguration
-	logger *log.Entry
+	logger        *log.Entry
 }
 
 type dummyConfiguration struct {
@@ -41,7 +41,7 @@ func (q *Dummy) Ack(message qp.IMessage) error {
 
 func (q *Dummy) Configure(configuration map[string]interface{}) error {
 	q.logger = log.WithFields(log.Fields{
-		"type": "queue",
+		"type":  "queue",
 		"queue": "Dummy",
 	})
 	q.logger.Debug("Reading configuration")

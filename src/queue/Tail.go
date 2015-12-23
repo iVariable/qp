@@ -16,7 +16,7 @@ type Tail struct {
 	messages      chan *tail.Line
 	once          sync.Once
 	startTailing  func()
-	logger		  *log.Entry
+	logger        *log.Entry
 }
 
 type tailConfiguration struct {
@@ -25,7 +25,7 @@ type tailConfiguration struct {
 
 func (q *Tail) Configure(configuration map[string]interface{}) error {
 	q.logger = log.WithFields(log.Fields{
-		"type": "queue",
+		"type":  "queue",
 		"queue": "Tail",
 	})
 	q.logger.Debug("Reading configuration")

@@ -2,18 +2,18 @@ package strategy
 
 import (
 	"errors"
+	log "github.com/Sirupsen/logrus"
+	"math/big"
 	"qp"
 	"sync"
-	"utils"
 	"time"
-	"math/big"
-	log "github.com/Sirupsen/logrus"
+	"utils"
 )
 
 const (
-	OnProcessingError_Panic = "panic"
+	OnProcessingError_Panic   = "panic"
 	OnProcessingError_Warning = "warning"
-	OnProcessingError_Ignore = "ignore"
+	OnProcessingError_Ignore  = "ignore"
 )
 
 type (
@@ -26,16 +26,16 @@ type (
 		stop          chan bool
 		wait          sync.WaitGroup
 		jobs          chan *qp.SimpleJob
-		startedAt	  time.Time
+		startedAt     time.Time
 	}
 
 	parallelProcessingConfiguration struct {
-		Name string
-		MaxThreads int
+		Name                string
+		MaxThreads          int
 		ProcessorThroughput int
-		Queue      string
-		Processor  string
-		OnProcessingError string
+		Queue               string
+		Processor           string
+		OnProcessingError   string
 	}
 
 	consumeResult struct {
@@ -51,9 +51,9 @@ func (p *ParallelProcessing) Configure(configuration map[string]interface{}, con
 
 	utils.FillStruct(configuration, &p.configuration)
 	p.logger = log.WithFields(log.Fields{
-		"type": "strategy",
+		"type":     "strategy",
 		"strategy": "ParallelProcessing",
-		"name": p.configuration.Name,
+		"name":     p.configuration.Name,
 	})
 
 	switch p.configuration.OnProcessingError {
@@ -94,7 +94,7 @@ func (p *ParallelProcessing) Start() error {
 		return errors.New("This strategy is already running! You need to Stop() it before calling Start again")
 	}
 	p.startedAt = time.Now()
-	p.process   = true
+	p.process = true
 
 	p.jobs = make(chan *qp.SimpleJob, p.configuration.MaxThreads)
 
@@ -161,7 +161,7 @@ func (p *ParallelProcessing) Start() error {
 					logger.WithField("error", err.Error()).Warn("Error on job processing")
 				case OnProcessingError_Panic:
 					logger.WithField("error", err.Error()).Fatal("Error on job processing")
-					panic("Error while processing: "+err.Error())
+					panic("Error while processing: " + err.Error())
 				}
 			}
 		}
@@ -197,19 +197,19 @@ func (p *ParallelProcessing) GetStatistics() qp.Statistics {
 		status = qp.StatusStopped
 	}
 	stats := qp.Statistics{
-		Status: status,
-		QueueName: p.configuration.Name,
+		Status:            status,
+		QueueName:         p.configuration.Name,
 		ProcessedMessages: *big.NewInt(0),
-		FailedMessaged: *big.NewInt(0),
-		StartedAt: p.startedAt,
-		MessagesInQueue: *big.NewInt(0),
+		FailedMessaged:    *big.NewInt(0),
+		StartedAt:         p.startedAt,
+		MessagesInQueue:   *big.NewInt(0),
 	}
 	p.logger.WithFields(log.Fields{
-		"Status": stats.Status,
+		"Status":            stats.Status,
 		"ProcessedMessages": stats.ProcessedMessages,
-		"FailedMessaged": stats.FailedMessaged,
-		"StartedAt": stats.StartedAt,
-		"MessagesInQueue": stats.MessagesInQueue,
+		"FailedMessaged":    stats.FailedMessaged,
+		"StartedAt":         stats.StartedAt,
+		"MessagesInQueue":   stats.MessagesInQueue,
 	}).Debug("Statistics")
 	return stats
 }

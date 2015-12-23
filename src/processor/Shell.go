@@ -1,24 +1,24 @@
 package processor
 
 import (
-	"fmt"
-	"qp"
 	"bytes"
-	"os/exec"
-	"utils"
-	"strings"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"os/exec"
+	"qp"
+	"strings"
+	"utils"
 )
 
 type Shell struct {
 	configuration shellConfiguration
-	logger *log.Entry
+	logger        *log.Entry
 }
 
 type shellConfiguration struct {
-	Command string
+	Command            string
 	MessagePlaceholder string
-	EchoOutput bool
+	EchoOutput         bool
 }
 
 func (l *Shell) Process(job qp.IJob) error {
@@ -67,7 +67,7 @@ func (l *Shell) Configure(configuration map[string]interface{}) error {
 		l.configuration.MessagePlaceholder = "%msg%"
 	}
 	l.logger = log.WithFields(log.Fields{
-		"type": "processor",
+		"type":      "processor",
 		"processor": "Shell",
 	})
 	l.logger.WithField("configuration", l.configuration).Info("Configuration loaded")

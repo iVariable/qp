@@ -8,8 +8,8 @@ import (
 	"resources"
 	"utils"
 
-	"gopkg.in/yaml.v2"
 	log "github.com/Sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -17,9 +17,7 @@ var (
 )
 
 func init() {
-	logger = log.WithFields(log.Fields{
-
-	})
+	logger = log.WithFields(log.Fields{})
 }
 
 func main() {
@@ -145,7 +143,7 @@ func run(context *qp.Context) {
 	logger.Info("Configuring processing strategy")
 	config := make(map[string]interface{})
 
-	for k,v := range context.Configuration.Strategy[0].Options {
+	for k, v := range context.Configuration.Strategy[0].Options {
 		config[k] = v
 	}
 

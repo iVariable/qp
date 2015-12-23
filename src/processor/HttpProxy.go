@@ -2,18 +2,18 @@ package processor
 
 import (
 	"errors"
+	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"qp"
 	"strings"
 	"time"
 	"utils"
-	log "github.com/Sirupsen/logrus"
 )
 
 type HttpProxy struct {
 	configuration httpProxyConfiguration
 	client        *http.Client
-	logger 		  *log.Entry
+	logger        *log.Entry
 }
 
 type httpProxyConfiguration struct {
@@ -64,7 +64,7 @@ func (h *HttpProxy) Configure(configuration map[string]interface{}) error {
 		Timeout: time.Duration(h.configuration.Timeout) * time.Second}
 
 	h.logger = log.WithFields(log.Fields{
-		"type": "processor",
+		"type":      "processor",
 		"processor": "HttpProxy",
 	})
 

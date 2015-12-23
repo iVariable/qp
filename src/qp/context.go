@@ -1,12 +1,12 @@
 package qp
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
-	log "github.com/Sirupsen/logrus"
 	"utils"
 )
 
@@ -20,7 +20,7 @@ type Config struct {
 	General struct {
 		Log struct {
 			Level string
-			Path string
+			Path  string
 		}
 	}
 	Strategy []struct {
@@ -41,17 +41,17 @@ type Config struct {
 }
 
 type Context struct {
-	Configuration       Config
-	Strategy            IProcessingStrategy
+	Configuration Config
+	Strategy      IProcessingStrategy
 
 	AvailableQueues     map[string]*IConsumableQueue
 	AvailableProcessors map[string]*IProcessor
 	AvailableStrategies map[string]*IProcessingStrategy
 
-	control             chan ControlSignal
-	data                map[string]interface{}
-	dataMutex           sync.RWMutex
-	logger				*log.Entry
+	control   chan ControlSignal
+	data      map[string]interface{}
+	dataMutex sync.RWMutex
+	logger    *log.Entry
 }
 
 type ControlSignal struct {
@@ -77,7 +77,7 @@ func (c *Context) DispatchLoop(run, stop, status func(c *Context)) {
 		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 
 		go func() {
-			for{
+			for {
 				sig := <-signals
 				c.logger.WithField("signal", sig).Debug("OS signal caught")
 				switch sig {

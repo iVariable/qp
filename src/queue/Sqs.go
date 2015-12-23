@@ -4,31 +4,31 @@ import (
 	"qp"
 	"utils"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"errors"
 	log "github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 type Sqs struct {
 	configuration sqsConfiguration
-	queue *sqs.SQS
-	queueUrl *string
-	logger *log.Entry
+	queue         *sqs.SQS
+	queueUrl      *string
+	logger        *log.Entry
 }
 
 type sqsConfiguration struct {
-	QueueName string
+	QueueName       string
 	WaitTimeSeconds int
-	AwsRegion string
-	AwsProfile string
+	AwsRegion       string
+	AwsProfile      string
 }
 
 func (q *Sqs) Configure(configuration map[string]interface{}) error {
 	q.logger = log.WithFields(log.Fields{
-		"type": "queue",
+		"type":  "queue",
 		"queue": "Sqs",
 	})
 	q.logger.Debug("Reading configuration")
@@ -44,7 +44,7 @@ func (q *Sqs) Configure(configuration map[string]interface{}) error {
 	}
 
 	q.queue = sqs.New(session.New(), &aws.Config{
-		Region: aws.String(q.configuration.AwsRegion),
+		Region:      aws.String(q.configuration.AwsRegion),
 		Credentials: credentials.NewSharedCredentials("", q.configuration.AwsProfile),
 	})
 
@@ -74,9 +74,9 @@ func (q *Sqs) Consume() (qp.IMessage, error) {
 	q.logger.Debug("Message consume")
 	for {
 		params := &sqs.ReceiveMessageInput{
-			QueueUrl: aws.String(*q.queueUrl),
+			QueueUrl:            aws.String(*q.queueUrl),
 			MaxNumberOfMessages: aws.Int64(1),
-			WaitTimeSeconds:   aws.Int64(int64(q.configuration.WaitTimeSeconds)),
+			WaitTimeSeconds:     aws.Int64(int64(q.configuration.WaitTimeSeconds)),
 		}
 
 		resp, err := q.queue.ReceiveMessage(params)
@@ -87,7 +87,7 @@ func (q *Sqs) Consume() (qp.IMessage, error) {
 
 		if len(resp.Messages) != 0 {
 			return &qp.Message{
-				Id: *resp.Messages[0].ReceiptHandle,
+				Id:   *resp.Messages[0].ReceiptHandle,
 				Body: *resp.Messages[0].Body,
 			}, nil
 		}

@@ -2,13 +2,13 @@ package processor
 
 import (
 	"fmt"
-	"qp"
 	log "github.com/Sirupsen/logrus"
+	"qp"
 )
 
 type Stdout struct {
 	configuration qp.Configuration
-	logger *log.Entry
+	logger        *log.Entry
 }
 
 func (l *Stdout) Process(job qp.IJob) error {
@@ -24,7 +24,7 @@ func (l *Stdout) Process(job qp.IJob) error {
 
 func (l *Stdout) Configure(configuration map[string]interface{}) error {
 	l.logger = log.WithFields(log.Fields{
-		"type": "processor",
+		"type":      "processor",
 		"processor": "Stdout",
 	})
 	l.logger.Info("Configuration loaded")
