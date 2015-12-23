@@ -8,29 +8,64 @@ import (
 	"resources"
 	"utils"
 
+	"flag"
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
 var (
 	logger *log.Entry
+	config qp.Config
 )
 
 func init() {
-	logger = log.WithFields(log.Fields{})
+	logger = log.WithFields(log.Fields{
+		"build": "<buildID>",
+	})
+
+	var (
+		infoVerbosity  = flag.Bool("v", false, "Overrides log level verbosity to INFO level (default verbosity level is WARN)")
+		debugVerbosity = flag.Bool("vv", false, "Overrides log level verbosity to DEBUG level")
+		showHelp       = flag.Bool("help", false, "Show this help message")
+	)
+
+	flag.Parse()
+
+	if flag.NArg() != 1 || *showHelp {
+		fmt.Fprintf(os.Stderr, "Usage of %s: %s [options] path_to_config\n\n", os.Args[0], os.Args[0])
+		fmt.Fprintf(os.Stderr, "ARGUMENTS\n")
+		fmt.Fprintf(os.Stderr, "  path_to_config\n\tpath to config file\n")
+		fmt.Fprintf(os.Stderr, "OPTIONS\n")
+		flag.PrintDefaults()
+		utils.Quit(utils.EXITCODE_OK)
+	}
+
+	configFile := flag.Arg(0)
+
+	source, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		logger.WithError(err).Fatal("Can't read config file")
+		utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Can't read config file: %s", err.Error())
+	}
+	err = yaml.Unmarshal(source, &config)
+	if err != nil {
+		logger.WithError(err).Fatal("Can't unmarshal config file")
+		utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Can't unmarshal config file: %s", err.Error())
+	}
+
+	if *infoVerbosity {
+		config.General.Log.Level = "info"
+	}
+
+	if *debugVerbosity {
+		config.General.Log.Level = "debug"
+	}
 }
 
 func main() {
+	context := qp.NewContext(&config)
 
-	context := qp.NewContext()
-
-	if len(os.Args) != 2 {
-		panic("Pls provide config as an argument")
-	}
-
-	configFile := os.Args[1]
-
-	load(context, configFile)
+	load(context)
 
 	go func() {
 		context.SendRun()
@@ -43,22 +78,11 @@ func status(context *qp.Context) {
 	fmt.Println(context.Strategy.GetStatistics())
 }
 
-func load(context *qp.Context, configFile string) {
-	var config qp.Config
+func load(context *qp.Context) {
 
-	source, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		panic(err)
-	}
-	err = yaml.Unmarshal(source, &config)
-	if err != nil {
-		panic(err)
-	}
-
-	context.Configuration = config
 	loadLogger(context)
 
-	logger.WithField("config", config).Info("Loading main configuration")
+	logger.WithField("config", context.Configuration).Info("Loading main configuration")
 
 	loadQueues(context)
 	loadProcessors(context)

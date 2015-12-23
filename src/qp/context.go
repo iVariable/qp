@@ -20,7 +20,6 @@ type Config struct {
 	General struct {
 		Log struct {
 			Level string
-			Path  string
 		}
 	}
 	Strategy []struct {
@@ -59,14 +58,21 @@ type ControlSignal struct {
 	ExitCode int
 }
 
-func NewContext() *Context {
-	context := Context{}
-	context.data = make(map[string]interface{})
-	context.control = make(chan ControlSignal)
-	context.AvailableQueues = make(map[string]*IConsumableQueue)
-	context.AvailableProcessors = make(map[string]*IProcessor)
-	context.AvailableStrategies = make(map[string]*IProcessingStrategy)
-	context.logger = log.WithField("type", "context")
+func NewContext(config *Config) *Context {
+	context := Context{
+		data:                make(map[string]interface{}),
+		control:             make(chan ControlSignal),
+		AvailableQueues:     make(map[string]*IConsumableQueue),
+		AvailableProcessors: make(map[string]*IProcessor),
+		AvailableStrategies: make(map[string]*IProcessingStrategy),
+		Configuration:       *config,
+		logger:              log.WithField("type", "context"),
+	}
+
+	if context.Configuration.General.Log.Level == "" {
+		context.Configuration.General.Log.Level = "warn"
+	}
+
 	return &context
 }
 

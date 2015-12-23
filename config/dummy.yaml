@@ -1,8 +1,3 @@
-general:
-  log:
-    level: debug
-    path: /tmp/log.log
-
 strategy:
   - name: My default processing strategy
     type: ParallelProcessing
@@ -10,7 +5,7 @@ strategy:
       MaxThreads: 10
       ProcessorThroughput: 2
       OnProcessingError: warning
-      Queue: DummyQueue
+      Queue: TailQueue
       Processor: Shell
 
 queue:
@@ -46,7 +41,7 @@ processor:
     options:
       MessagePlaceholder: "%msg%"
       Command: "echo %msg% | grep 34"
-      EchoOutput: true
+      EchoOutput: false
 
   - name: HttpProxy
     type: HttpProxy
