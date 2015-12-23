@@ -9,8 +9,8 @@ strategy:
       MaxThreads: 10
       ProcessorThroughput: 200
       OnProcessingError: warning
-      Queue: Sqs
-      Processor: Shell
+      Queue: TailQueueFIFO
+      Processor: HttpProxy
 
 queue:
   - name: DummyQueue
@@ -51,4 +51,4 @@ processor:
     type: HTTPProxy
     options:
       Timeout: 5
-      Url: "http://localhost:9000/"
+      URL: "http://localhost:9000/"
