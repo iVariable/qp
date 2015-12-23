@@ -2,6 +2,7 @@ package qp
 
 import "encoding/json"
 
+// IConsumableQueue Consumable queue interface
 type IConsumableQueue interface {
 	GetName() string
 	Configure(configuration map[string]interface{}) error
@@ -11,25 +12,30 @@ type IConsumableQueue interface {
 	GetNumberOfMessages() (int, error)
 }
 
-type Message struct {
-	Id   interface{}
-	Body interface{}
-}
-
+// IMessage - message interface
 type IMessage interface {
 	Serialize() (string, error)
-	GetId() interface{}
+	GetID() interface{}
 	GetBody() interface{}
 }
 
-func (m *Message) GetId() interface{} {
-	return m.Id
+// Message simple message struct
+type Message struct {
+	ID   interface{}
+	Body interface{}
 }
 
+// GetID returns message id
+func (m *Message) GetID() interface{} {
+	return m.ID
+}
+
+// GetBody returns message body
 func (m *Message) GetBody() interface{} {
 	return m.Body
 }
 
+// Serialize returns serialized representation of message
 func (m *Message) Serialize() (string, error) {
 	jsonBytes, err := json.Marshal(m)
 	if err != nil {

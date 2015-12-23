@@ -10,6 +10,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+// Tail - tails a file. Treats each line as a message
+// Used mainly for debugging
 type Tail struct {
 	configuration tailConfiguration
 	t             *tail.Tail
@@ -23,6 +25,7 @@ type tailConfiguration struct {
 	Path string
 }
 
+// Configure configure queue
 func (q *Tail) Configure(configuration map[string]interface{}) error {
 	q.logger = log.WithFields(log.Fields{
 		"type":  "queue",
@@ -37,7 +40,7 @@ func (q *Tail) Configure(configuration map[string]interface{}) error {
 		t, err := tail.TailFile(q.configuration.Path, tail.Config{Follow: true})
 		if err != nil {
 			q.logger.WithField("file", q.configuration.Path).Fatal("Failed to tail file")
-			utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Failed to tail file %s", q.configuration.Path)
+			utils.Quitf(utils.ExitCodeRuntimeError, "Failed to tail file %s", q.configuration.Path)
 		}
 		q.t = t
 
@@ -52,29 +55,34 @@ func (q *Tail) Configure(configuration map[string]interface{}) error {
 	return nil
 }
 
+// GetName returns queue name
 func (q *Tail) GetName() string {
 	return "Tail"
 }
 
+// Consume consumes a message from the queue
 func (q *Tail) Consume() (qp.IMessage, error) {
 	q.once.Do(q.startTailing)
 	q.logger.Debug("Message consume")
 
 	line := <-q.messages
 
-	return &qp.Message{Id: line.Time.String(), Body: line.Text}, nil
+	return &qp.Message{ID: line.Time.String(), Body: line.Text}, nil
 }
 
+// Ack acknowledges a message from the queue
 func (q *Tail) Ack(message qp.IMessage) error {
 	q.logger.WithField("message", message).Debug("Message acknowledged")
 	return nil
 }
 
+// Reject rejects a message
 func (q *Tail) Reject(message qp.IMessage) error {
 	q.logger.WithField("message", message).Debug("Message rejected")
 	return errors.New("Tail queue does NOT support Reject() method")
 }
 
+// GetNumberOfMessages return number of messages in the queue
 func (q *Tail) GetNumberOfMessages() (int, error) {
 	return 9999999, nil
 }

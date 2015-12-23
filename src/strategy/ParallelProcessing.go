@@ -10,13 +10,15 @@ import (
 	"utils"
 )
 
+// OnProcessingError constants
 const (
-	OnProcessingError_Panic   = "panic"
-	OnProcessingError_Warning = "warning"
-	OnProcessingError_Ignore  = "ignore"
+	OnProcessingErrorPanic = "panic"
+	OnProcessingErrorWarning = "warning"
+	OnProcessingErrorIgnore = "ignore"
 )
 
 type (
+	// ParallelProcessing - processing strategy
 	ParallelProcessing struct {
 		configuration parallelProcessingConfiguration
 		queue         qp.IConsumableQueue
@@ -44,6 +46,7 @@ type (
 	}
 )
 
+// Configure configures strategy
 func (p *ParallelProcessing) Configure(configuration map[string]interface{}, context *qp.Context) error {
 	log.WithFields(log.Fields{
 		"strategy": "ParallelProcessing",
@@ -57,9 +60,9 @@ func (p *ParallelProcessing) Configure(configuration map[string]interface{}, con
 	})
 
 	switch p.configuration.OnProcessingError {
-	case OnProcessingError_Ignore:
-	case OnProcessingError_Warning:
-	case OnProcessingError_Panic:
+	case OnProcessingErrorIgnore:
+	case OnProcessingErrorWarning:
+	case OnProcessingErrorPanic:
 	default:
 		panic("Unknown value set for OnProcessingError")
 	}
@@ -87,6 +90,7 @@ func (p *ParallelProcessing) Configure(configuration map[string]interface{}, con
 	return nil
 }
 
+// Start starts processing queue
 func (p *ParallelProcessing) Start() error {
 	p.logger.Info("Start processing")
 	if p.process {
@@ -156,10 +160,10 @@ func (p *ParallelProcessing) Start() error {
 			logger.Debug("Recieved job")
 			if err := p.processor.Process(job); err != nil {
 				switch p.configuration.OnProcessingError {
-				case OnProcessingError_Ignore:
-				case OnProcessingError_Warning:
+				case OnProcessingErrorIgnore:
+				case OnProcessingErrorWarning:
 					logger.WithField("error", err.Error()).Warn("Error on job processing")
-				case OnProcessingError_Panic:
+				case OnProcessingErrorPanic:
 					logger.WithField("error", err.Error()).Fatal("Error on job processing")
 					panic("Error while processing: " + err.Error())
 				}
@@ -180,6 +184,7 @@ func (p *ParallelProcessing) Start() error {
 	return nil
 }
 
+// Stop stops queue processing
 func (p *ParallelProcessing) Stop() error {
 	p.logger.Info("Stopping processing")
 	p.process = false
@@ -189,6 +194,7 @@ func (p *ParallelProcessing) Stop() error {
 	return nil
 }
 
+// GetStatistics returns stats
 func (p *ParallelProcessing) GetStatistics() qp.Statistics {
 	var status string
 	if p.process {

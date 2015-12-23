@@ -5,18 +5,21 @@ import (
 	"os"
 )
 
+// Exit codes
 const (
-	EXITCODE_OK               = 0
-	EXITCODE_MISCONFIGURATION = 1
-	EXITCODE_RUNTIME_ERROR    = 2
-	EXITCODE_SHUTDOWN_FORCED  = 3
+	ExitCodeOk = 0
+	ExitCodeMisconfiguration = 1
+	ExitCodeRuntimeError = 2
+	ExitCodeShutdownForced = 3
 )
 
+// Quit immediately stop program and quit with exit code
 func Quit(code int) {
 	os.Exit(code)
 }
 
+// Quitf immediately stop program and quit with exit code and message
 func Quitf(code int, msg string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf("Unknown queue type requested: %s", args...))
+	fmt.Println(fmt.Sprintf(msg, args...))
 	Quit(code)
 }

@@ -10,7 +10,10 @@ import (
 	"utils"
 )
 
-type HttpProxy struct {
+// HTTPProxy - Proxy request to custom http-endpoint.
+// Acknowledge message in case of HTTP response code 200
+// Any other response code - reject message
+type HTTPProxy struct {
 	configuration httpProxyConfiguration
 	client        *http.Client
 	logger        *log.Entry
@@ -18,10 +21,11 @@ type HttpProxy struct {
 
 type httpProxyConfiguration struct {
 	Timeout int
-	Url     string
+	URL     string
 }
 
-func (h *HttpProxy) Process(job qp.IJob) error {
+// Process - Process job
+func (h *HTTPProxy) Process(job qp.IJob) error {
 	h.logger.WithField("job", job).Debug("Processing job")
 	serializedMessage, err := job.GetMessage().Serialize()
 	if err != nil {
@@ -29,7 +33,7 @@ func (h *HttpProxy) Process(job qp.IJob) error {
 		return err
 	}
 
-	request, err := http.NewRequest("POST", h.configuration.Url, strings.NewReader(serializedMessage))
+	request, err := http.NewRequest("POST", h.configuration.URL, strings.NewReader(serializedMessage))
 	if err != nil {
 		return err
 	}
@@ -53,7 +57,8 @@ func (h *HttpProxy) Process(job qp.IJob) error {
 	return nil
 }
 
-func (h *HttpProxy) Configure(configuration map[string]interface{}) error {
+// Configure - configure processor
+func (h *HTTPProxy) Configure(configuration map[string]interface{}) error {
 	utils.FillStruct(configuration, &h.configuration)
 
 	if h.configuration.Timeout < 0 {

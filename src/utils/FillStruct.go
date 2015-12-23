@@ -6,6 +6,7 @@ import (
 	"reflect"
 )
 
+// FillStruct fills the struct from generic map
 func FillStruct(m map[string]interface{}, s interface{}) error {
 	structValue := reflect.ValueOf(s).Elem()
 

@@ -37,7 +37,7 @@ func init() {
 		fmt.Fprintf(os.Stderr, "  path_to_config\n\tpath to config file\n")
 		fmt.Fprintf(os.Stderr, "OPTIONS\n")
 		flag.PrintDefaults()
-		utils.Quit(utils.EXITCODE_OK)
+		utils.Quit(utils.ExitCodeOk)
 	}
 
 	configFile := flag.Arg(0)
@@ -45,12 +45,12 @@ func init() {
 	source, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		logger.WithError(err).Fatal("Can't read config file")
-		utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Can't read config file: %s", err.Error())
+		utils.Quitf(utils.ExitCodeRuntimeError, "Can't read config file: %s", err.Error())
 	}
 	err = yaml.Unmarshal(source, &config)
 	if err != nil {
 		logger.WithError(err).Fatal("Can't unmarshal config file")
-		utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Can't unmarshal config file: %s", err.Error())
+		utils.Quitf(utils.ExitCodeRuntimeError, "Can't unmarshal config file: %s", err.Error())
 	}
 
 	if *infoVerbosity {
@@ -96,7 +96,7 @@ func load(context *qp.Context) {
 func loadLogger(context *qp.Context) {
 	level, err := log.ParseLevel(context.Configuration.General.Log.Level)
 	if err != nil {
-		utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Wrong LogLevel [%s]", context.Configuration.General.Log.Level)
+		utils.Quitf(utils.ExitCodeMisconfiguration, "Wrong LogLevel [%s]", context.Configuration.General.Log.Level)
 	}
 	log.SetLevel(level)
 }
@@ -106,12 +106,12 @@ func loadQueues(context *qp.Context) {
 		newQueue, ok := resources.AvailableQueues[config.Type]
 		if !ok {
 			logger.WithField("requestedType", config.Type).Fatal("Unknown queue type requested")
-			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Unknown queue type requested: %s", config.Type)
+			utils.Quitf(utils.ExitCodeMisconfiguration, "Unknown queue type requested: %s", config.Type)
 		}
 		newInstance := newQueue()
 		if err := newInstance.Configure(config.Options); err != nil {
 			logger.WithField("error", err).Fatal("Error configuring queue")
-			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring queue: %s", err.Error())
+			utils.Quitf(utils.ExitCodeMisconfiguration, "Error configuring queue: %s", err.Error())
 		}
 		context.AvailableQueues[config.Name] = &newInstance
 	}
@@ -122,12 +122,12 @@ func loadProcessors(context *qp.Context) {
 		newValue, ok := resources.AvailableProcessors[config.Type]
 		if !ok {
 			logger.WithField("requestedType", config.Type).Fatal("Unknown processor type requested")
-			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Unknown processor type requested: %s", config.Type)
+			utils.Quitf(utils.ExitCodeMisconfiguration, "Unknown processor type requested: %s", config.Type)
 		}
 		newInstance := newValue()
 		if err := newInstance.Configure(config.Options); err != nil {
 			logger.WithField("error", err).Fatal("Error configuring processor")
-			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring processor: %s", err.Error())
+			utils.Quitf(utils.ExitCodeMisconfiguration, "Error configuring processor: %s", err.Error())
 		}
 		context.AvailableProcessors[config.Name] = &newInstance
 	}
@@ -136,18 +136,18 @@ func loadProcessors(context *qp.Context) {
 func loadStrategies(context *qp.Context) {
 	if len(context.Configuration.Strategy) != 1 {
 		logger.Fatal("There should be exactly one Strategy configured")
-		utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "There should be exactly one Strategy configured")
+		utils.Quitf(utils.ExitCodeMisconfiguration, "There should be exactly one Strategy configured")
 	}
 	for _, config := range context.Configuration.Strategy {
 		newValue, ok := resources.AvailableStrategies[config.Type]
 		if !ok {
 			logger.WithField("requestedType", config.Type).Fatal("Unknown strategy type requested")
-			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Unknown strategy type requested: %s", config.Type)
+			utils.Quitf(utils.ExitCodeMisconfiguration, "Unknown strategy type requested: %s", config.Type)
 		}
 		newInstance := newValue()
 		if err := newInstance.Configure(config.Options, context); err != nil {
 			logger.WithField("error", err).Fatal("Error configuring strategy")
-			utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring strategy: %s", err.Error())
+			utils.Quitf(utils.ExitCodeMisconfiguration, "Error configuring strategy: %s", err.Error())
 		}
 		context.AvailableStrategies[config.Name] = &newInstance
 	}
@@ -175,7 +175,7 @@ func run(context *qp.Context) {
 
 	if err := context.Strategy.Configure(config, context); err != nil {
 		logger.WithField("error", err).Fatal("Error configuring strategy")
-		utils.Quitf(utils.EXITCODE_MISCONFIGURATION, "Error configuring strategy: %s", err.Error())
+		utils.Quitf(utils.ExitCodeMisconfiguration, "Error configuring strategy: %s", err.Error())
 	}
 
 	logger.Info("Start processing queue")
@@ -186,6 +186,6 @@ func run(context *qp.Context) {
 		}
 	} else {
 		logger.WithField("error", err).Fatal("Error running strategy")
-		utils.Quitf(utils.EXITCODE_RUNTIME_ERROR, "Error running strategy: %s", err.Error())
+		utils.Quitf(utils.ExitCodeRuntimeError, "Error running strategy: %s", err.Error())
 	}
 }

@@ -10,6 +10,8 @@ import (
 	"utils"
 )
 
+// Dummy - dummy queue which generates static messages with randomizable delay
+// Used for debugging
 type Dummy struct {
 	configuration dummyConfiguration
 	logger        *log.Entry
@@ -19,10 +21,12 @@ type dummyConfiguration struct {
 	RandomSleepDelay int
 }
 
+// GetName returns queue name
 func (q *Dummy) GetName() string {
 	return "Dummy queue"
 }
 
+// Consume consumes a message
 func (q *Dummy) Consume() (qp.IMessage, error) {
 	q.logger.Debug("Message consume")
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -30,15 +34,17 @@ func (q *Dummy) Consume() (qp.IMessage, error) {
 	time.Sleep(time.Duration(r.Intn(q.configuration.RandomSleepDelay)) * time.Millisecond) //TODO make configurable
 
 	return &qp.Message{
-		Id:   time.Now(),
+		ID:   time.Now(),
 		Body: fmt.Sprintf("Dummy message generated | break at %s", time.Now())}, nil
 }
 
+// Ack acknowledges a message
 func (q *Dummy) Ack(message qp.IMessage) error {
 	q.logger.WithField("message", message).Debug("Message acknowledged")
 	return nil
 }
 
+// Configure configure queue
 func (q *Dummy) Configure(configuration map[string]interface{}) error {
 	q.logger = log.WithFields(log.Fields{
 		"type":  "queue",
@@ -53,11 +59,13 @@ func (q *Dummy) Configure(configuration map[string]interface{}) error {
 	return nil
 }
 
+// Reject reject a message
 func (q *Dummy) Reject(message qp.IMessage) error {
 	q.logger.WithField("message", message).Debug("Message rejected")
 	return nil
 }
 
+// GetNumberOfMessages returns number of messages
 func (q *Dummy) GetNumberOfMessages() (int, error) {
 	return 9999, nil
 }

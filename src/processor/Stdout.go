@@ -6,11 +6,13 @@ import (
 	"qp"
 )
 
+// Stdout - output message to stdout and acknowledge it
+// Used mainly for debugging
 type Stdout struct {
-	configuration qp.Configuration
 	logger        *log.Entry
 }
 
+// Process - process job
 func (l *Stdout) Process(job qp.IJob) error {
 	l.logger.WithField("job", job).Debug("Processing job")
 	fmt.Printf("[Stdout processor] Received message: %#v\n", job.GetMessage())
@@ -22,6 +24,7 @@ func (l *Stdout) Process(job qp.IJob) error {
 	return nil
 }
 
+// Configure - configure processor
 func (l *Stdout) Configure(configuration map[string]interface{}) error {
 	l.logger = log.WithFields(log.Fields{
 		"type":      "processor",

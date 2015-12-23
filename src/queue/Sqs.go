@@ -12,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
+// Sqs - AWS SQS implementation
 type Sqs struct {
 	configuration sqsConfiguration
 	queue         *sqs.SQS
-	queueUrl      *string
+	queueURL      *string
 	logger        *log.Entry
 }
 
@@ -26,6 +27,7 @@ type sqsConfiguration struct {
 	AwsProfile      string
 }
 
+// Configure configure queue
 func (q *Sqs) Configure(configuration map[string]interface{}) error {
 	q.logger = log.WithFields(log.Fields{
 		"type":  "queue",
@@ -59,22 +61,24 @@ func (q *Sqs) Configure(configuration map[string]interface{}) error {
 		return err
 	}
 
-	q.queueUrl = resp.QueueUrl
+	q.queueURL = resp.QueueUrl
 
 	q.logger.WithField("configuration", q.configuration).Info("Configuration loaded")
 
 	return nil
 }
 
+// GetName returns name of the queue
 func (q *Sqs) GetName() string {
 	return "Sqs"
 }
 
+// Consume consume a message from the queue
 func (q *Sqs) Consume() (qp.IMessage, error) {
 	q.logger.Debug("Message consume")
 	for {
 		params := &sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(*q.queueUrl),
+			QueueUrl:            aws.String(*q.queueURL),
 			MaxNumberOfMessages: aws.Int64(1),
 			WaitTimeSeconds:     aws.Int64(int64(q.configuration.WaitTimeSeconds)),
 		}
@@ -87,18 +91,19 @@ func (q *Sqs) Consume() (qp.IMessage, error) {
 
 		if len(resp.Messages) != 0 {
 			return &qp.Message{
-				Id:   *resp.Messages[0].ReceiptHandle,
+				ID:   *resp.Messages[0].ReceiptHandle,
 				Body: *resp.Messages[0].Body,
 			}, nil
 		}
 	}
 }
 
+// Ack acknowledge a message
 func (q *Sqs) Ack(message qp.IMessage) error {
 	q.logger.WithField("message", message).Debug("Message acknowledged")
 	params := &sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(*q.queueUrl),
-		ReceiptHandle: aws.String((message.GetId()).(string)),
+		QueueUrl:      aws.String(*q.queueURL),
+		ReceiptHandle: aws.String((message.GetID()).(string)),
 	}
 
 	_, err := q.queue.DeleteMessage(params)
@@ -110,6 +115,7 @@ func (q *Sqs) Ack(message qp.IMessage) error {
 	return nil
 }
 
+// Reject reject a message
 func (q *Sqs) Reject(message qp.IMessage) error {
 	q.logger.WithField("message", message).Debug("Message rejected")
 	// Do nothing. Aws SQS will take care of not acknowledged messages
@@ -118,6 +124,7 @@ func (q *Sqs) Reject(message qp.IMessage) error {
 	return nil
 }
 
+// GetNumberOfMessages returns the number of messages
 func (q *Sqs) GetNumberOfMessages() (int, error) {
 	return 9999999, nil
 }

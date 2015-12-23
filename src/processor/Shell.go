@@ -10,6 +10,9 @@ import (
 	"utils"
 )
 
+// Shell - run custom shell command for message processing
+// Acknowledge message in case exit code = 0
+// Any other code - reject
 type Shell struct {
 	configuration shellConfiguration
 	logger        *log.Entry
@@ -21,6 +24,7 @@ type shellConfiguration struct {
 	EchoOutput         bool
 }
 
+// Process - Process job
 func (l *Shell) Process(job qp.IJob) error {
 	l.logger.WithField("job", job).Debug("Processing job")
 	msg, err := job.GetMessage().Serialize()
@@ -61,6 +65,7 @@ func (l *Shell) Process(job qp.IJob) error {
 	return nil
 }
 
+// Configure - configure processor
 func (l *Shell) Configure(configuration map[string]interface{}) error {
 	utils.FillStruct(configuration, &l.configuration)
 	if l.configuration.MessagePlaceholder == "" {
