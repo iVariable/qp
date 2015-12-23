@@ -1,11 +1,15 @@
+general:
+  log:
+    level: info
+
 strategy:
   - name: My default processing strategy
     type: ParallelProcessing
     options:
       MaxThreads: 10
-      ProcessorThroughput: 2
+      ProcessorThroughput: 200
       OnProcessingError: warning
-      Queue: TailQueue
+      Queue: Sqs
       Processor: Shell
 
 queue:
