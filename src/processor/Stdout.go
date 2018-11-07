@@ -3,7 +3,7 @@ package processor
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"qp"
+	"github.com/iVariable/qp/src/qp"
 )
 
 // Stdout - output message to stdout and acknowledge it

@@ -3,11 +3,11 @@ package strategy
 import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/utils"
 	"math/big"
-	"qp"
 	"sync"
 	"time"
-	"utils"
 )
 
 // OnProcessingError constants

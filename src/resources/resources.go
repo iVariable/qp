@@ -1,10 +1,10 @@
 package resources
 
 import (
-	"processor"
-	"qp"
-	"queue"
-	"strategy"
+	"github.com/iVariable/qp/src/processor"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/queue"
+	"github.com/iVariable/qp/src/strategy"
 )
 
 var (

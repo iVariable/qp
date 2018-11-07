@@ -2,9 +2,9 @@ package queue
 
 import (
 	"errors"
-	"qp"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/utils"
 	"sync"
-	"utils"
 
 	"github.com/ActiveState/tail"
 	log "github.com/Sirupsen/logrus"

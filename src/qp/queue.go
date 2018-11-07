@@ -17,12 +17,14 @@ type IMessage interface {
 	Serialize() (string, error)
 	GetID() interface{}
 	GetBody() interface{}
+	GetRaw() string
 }
 
 // Message simple message struct
 type Message struct {
 	ID   interface{}
 	Body interface{}
+	Raw  string
 }
 
 // GetID returns message id
@@ -33,6 +35,10 @@ func (m *Message) GetID() interface{} {
 // GetBody returns message body
 func (m *Message) GetBody() interface{} {
 	return m.Body
+}
+
+func (m *Message) GetRaw() string {
+	return m.Raw
 }
 
 // Serialize returns serialized representation of message

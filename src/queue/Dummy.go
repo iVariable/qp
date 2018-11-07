@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/utils"
 	"math/rand"
-	"qp"
 	"time"
-	"utils"
 )
 
 // Dummy - dummy queue which generates static messages with randomizable delay

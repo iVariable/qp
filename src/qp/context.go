@@ -2,12 +2,12 @@ package qp
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/iVariable/qp/src/utils"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
-	"utils"
 )
 
 // Control signal constants

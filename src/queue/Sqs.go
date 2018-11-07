@@ -1,8 +1,8 @@
 package queue
 
 import (
-	"qp"
-	"utils"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/utils"
 
 	"errors"
 	log "github.com/Sirupsen/logrus"
@@ -93,6 +93,7 @@ func (q *Sqs) Consume() (qp.IMessage, error) {
 			return &qp.Message{
 				ID:   *resp.Messages[0].ReceiptHandle,
 				Body: *resp.Messages[0].Body,
+				Raw:  resp.GoString(),
 			}, nil
 		}
 	}

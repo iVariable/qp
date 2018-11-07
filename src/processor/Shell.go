@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/utils"
 	"os/exec"
-	"qp"
 	"strings"
-	"utils"
 )
 
 // Shell - run custom shell command for message processing
@@ -22,15 +22,22 @@ type shellConfiguration struct {
 	Command            string
 	MessagePlaceholder string
 	EchoOutput         bool
+	SendRaw            bool
 }
 
 // Process - Process job
 func (l *Shell) Process(job qp.IJob) error {
 	l.logger.WithField("job", job).Debug("Processing job")
-	msg, err := job.GetMessage().Serialize()
-	if err != nil {
-		l.logger.WithField("error", err).Error("Error during message serialization")
-		return err
+	var msg string
+	var err error
+	if l.configuration.SendRaw {
+		msg = job.GetMessage().GetRaw()
+	} else {
+		msg, err = job.GetMessage().Serialize()
+		if err != nil {
+			l.logger.WithField("error", err).Error("Error during message serialization")
+			return err
+		}
 	}
 
 	commandLine := strings.Replace(l.configuration.Command, l.configuration.MessagePlaceholder, msg, -1) //TODO message escaping missing!

@@ -3,11 +3,11 @@ package processor
 import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/utils"
 	"net/http"
-	"qp"
 	"strings"
 	"time"
-	"utils"
 )
 
 // HTTPProxy - Proxy request to custom http-endpoint.

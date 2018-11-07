@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/iVariable/qp/src/qp"
+	"github.com/iVariable/qp/src/resources"
+	"github.com/iVariable/qp/src/utils"
 	"io/ioutil"
 	"os"
-	"qp"
-	"resources"
-	"utils"
 
 	"flag"
 	log "github.com/Sirupsen/logrus"
